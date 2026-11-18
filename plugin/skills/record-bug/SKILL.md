@@ -24,7 +24,7 @@ Call `connect_browser` with `url` when you have one. The first time, Chrome show
 
 Then tell the user what to do, in one short message:
 
-> Chrome is connected. In the Dramamine side panel: **Start recording**, reproduce the bug, press **Alt+Shift+S** on the wrong part and type what you expected, then **Stop recording** and click **Send to <this folder>**.
+> Chrome is connected. In the Dramamine side panel: **Start recording**, reproduce the bug, press **Alt+Shift+S** on the wrong part and type what you expected, then **Stop recording** and click **Send to agent**.
 
 If the user already described the bug, say what to mark in their terms (for example "mark the cart total").
 

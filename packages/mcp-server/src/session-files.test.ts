@@ -2,7 +2,7 @@ import { appendFileSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { findEventsFile, followFile, registerSession, sessionPaths } from './session-files';
+import { findEventsFile, followFile, processClient, processStartedAt, registerSession, sessionPaths } from './session-files';
 
 const stops: (() => void)[] = [];
 afterEach(() => stops.splice(0).forEach((s) => s()));
@@ -39,5 +39,17 @@ describe('session files for the monitor', () => {
     await expect.poll(() => lines).toEqual(['first']);
     appendFileSync(file, 'ond\n');
     await expect.poll(() => lines).toEqual(['first', 'second']);
+  });
+
+  it('reads when a process started, to order sessions by when Claude Code started them', () => {
+    const t = processStartedAt(process.pid)!;
+    expect(Date.now() - t).toBeGreaterThanOrEqual(0);
+    expect(Date.now() - t).toBeLessThan(10 * 60_000);
+    expect(processStartedAt(999_999_999)).toBeNull();
+  });
+
+  it('tells terminal sessions from app sessions by whether the process has a terminal', () => {
+    expect(['terminal', 'app']).toContain(processClient(process.pid));
+    expect(processClient(999_999_999)).toBeNull();
   });
 });

@@ -161,6 +161,9 @@ export async function completeCheckpoint(draft: CheckpointDraft | undefined): Pr
   const p = pendingCheckpoint;
   pendingCheckpoint = null;
   if (!s || !p) return;
+  // Resume step capture before the slow image work: a click right after saving must not be lost.
+  // The checkpoint's place among the steps comes from its timestamp, so the order is unaffected.
+  s.paused = false;
   if (draft) {
     const regionId = blobId();
     const viewportId = blobId();
@@ -177,7 +180,6 @@ export async function completeCheckpoint(draft: CheckpointDraft | undefined): Pr
       { [regionId]: region, [viewportId]: viewport },
     );
   }
-  s.paused = false;
   broadcastState();
 }
 

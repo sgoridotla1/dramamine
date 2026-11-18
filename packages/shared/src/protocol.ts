@@ -28,7 +28,10 @@ export const ReplayParamsSchema = z.object({
   redactedValues: z.record(z.string(), z.string()).default({}),
   stepTimeoutMs: z.number().int().positive().max(60_000).optional(),
   checkTimeoutMs: z.number().int().positive().max(60_000).optional(),
+  /** Which screenshots the result carries: failed (default) / all / none. */
+  images: z.enum(['failed', 'all', 'none']).default('failed'),
 });
+export type ReplayImageMode = z.infer<typeof ReplayParamsSchema>['images'];
 export type ReplayParams = z.input<typeof ReplayParamsSchema>;
 /** Replay parameters after validation, with defaults applied. */
 export type ResolvedReplayParams = z.infer<typeof ReplayParamsSchema>;
@@ -74,7 +77,15 @@ export type ExtensionMessage = z.infer<typeof ExtensionMessageSchema>;
 
 export const ServerMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('welcome'), cwd: z.string() }),
-  z.object({ type: z.literal('session-info'), token: z.string(), cwd: z.string(), startedAt: z.number(), connected: z.boolean() }),
+  z.object({
+    type: z.literal('session-info'),
+    token: z.string(),
+    cwd: z.string(),
+    startedAt: z.number(),
+    connected: z.boolean(),
+    /** Where the agent session runs: in a terminal, or in an app such as the Claude desktop app. */
+    client: z.enum(['terminal', 'app']).optional(),
+  }),
   z.object({ type: z.literal('pong') }),
   z.object({ type: z.literal('waiting'), waiting: z.boolean() }),
   z.object({ type: z.literal('request'), id: z.number().int(), method: z.enum(['listRecordings', 'getRecording', 'replay', 'openTab']), params: z.unknown() }),

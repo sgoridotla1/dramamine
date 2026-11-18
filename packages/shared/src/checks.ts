@@ -35,7 +35,8 @@ export const GlobalCheckSchema = z.discriminatedUnion('op', [
 ]);
 export type GlobalCheck = z.infer<typeof GlobalCheckSchema>;
 
-export const CheckStatusSchema = z.enum(['pass', 'fail', 'judged', 'not-evaluated']);
+/** not-found: the element a text or value check needs was missing, so the check says nothing about the bug. */
+export const CheckStatusSchema = z.enum(['pass', 'fail', 'not-found', 'judged', 'not-evaluated']);
 export type CheckStatus = z.infer<typeof CheckStatusSchema>;
 
 export const CheckResultSchema = z.object({

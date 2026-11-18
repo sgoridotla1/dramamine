@@ -41,6 +41,30 @@ export function parentPid(pid: number): number | null {
   }
 }
 
+/**
+ * When a process started, from `ps`. For the MCP server's parent this is when the Claude Code
+ * session started, which stays the same when Claude Code restarts its plugin servers.
+ */
+export function processStartedAt(pid: number): number | null {
+  try {
+    const t = Date.parse(execFileSync('ps', ['-o', 'lstart=', '-p', String(pid)], { encoding: 'utf8' }).trim());
+    return Number.isFinite(t) ? t : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Whether a process has a terminal: Claude Code started in a terminal does, the Claude desktop app's sessions do not. */
+export function processClient(pid: number): 'terminal' | 'app' | null {
+  try {
+    const tty = execFileSync('ps', ['-o', 'tty=', '-p', String(pid)], { encoding: 'utf8' }).trim();
+    if (!tty) return null;
+    return tty === '?' || tty === '??' ? 'app' : 'terminal';
+  } catch {
+    return null;
+  }
+}
+
 /** The events file of the nearest ancestor that registered a session, if any. */
 export function findEventsFile(startPid: number, getParent = parentPid, dir = SESSIONS_DIR, maxDepth = 12): string | null {
   for (let pid: number | null = startPid, i = 0; pid && i < maxDepth; pid = getParent(pid), i++) {

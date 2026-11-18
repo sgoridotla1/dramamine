@@ -68,7 +68,7 @@ global checks:
 
 exports[`replay report > renders an error with the failed step, skipped steps and unreached checkpoints 1`] = `
 "# Replay: Cart total shows $0  [ERROR]
-ERROR - a step could not be performed, so this replay says nothing about the bug.
+ERROR - a step could not be performed or a checked element was not found, so this replay says nothing about the bug.
 recording: rec_1   start: http://localhost:3000/products.html   duration: 3.2s
 
 warnings:

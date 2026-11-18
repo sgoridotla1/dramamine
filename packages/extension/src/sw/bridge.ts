@@ -34,10 +34,18 @@ interface Live {
 
 const live = new Map<string, Live>();
 let sessionsCache: Record<string, BridgeSession> = {};
+let sessionsLoaded: Promise<void> | null = null;
 
+/**
+ * Reads the stored sessions once per service worker start; after that the in-memory copy is
+ * authoritative (only this worker writes it). Reloading on every call let a concurrent reload
+ * replace the object another call was updating, losing a share.
+ */
 async function loadSessions(): Promise<Record<string, BridgeSession>> {
-  const r = await chrome.storage.session.get(SESSIONS_KEY);
-  sessionsCache = (r[SESSIONS_KEY] as Record<string, BridgeSession> | undefined) ?? {};
+  sessionsLoaded ??= chrome.storage.session.get(SESSIONS_KEY).then((r) => {
+    sessionsCache = { ...((r[SESSIONS_KEY] as Record<string, BridgeSession> | undefined) ?? {}), ...sessionsCache };
+  });
+  await sessionsLoaded;
   return sessionsCache;
 }
 
@@ -196,6 +204,7 @@ export interface FoundSession {
   token: string;
   cwd: string;
   startedAt: number;
+  client?: 'terminal' | 'app';
 }
 
 const PROBE_TIMEOUT_MS = 1500;
@@ -225,7 +234,7 @@ function probe(port: number): Promise<FoundSession | null> {
         /* not ours */
       }
       const msg = ServerMessageSchema.safeParse(data);
-      done(msg.success && msg.data.type === 'session-info' ? { port, token: msg.data.token, cwd: msg.data.cwd, startedAt: msg.data.startedAt } : null);
+      done(msg.success && msg.data.type === 'session-info' ? { port, token: msg.data.token, cwd: msg.data.cwd, startedAt: msg.data.startedAt, ...(msg.data.client ? { client: msg.data.client } : {}) } : null);
     };
     ws.onerror = () => done(null);
     ws.onclose = () => done(null);
@@ -237,7 +246,10 @@ export async function discoverSessions(): Promise<FoundSession[]> {
   await loadSessions();
   const ports = Array.from({ length: DISCOVERY_PORT_COUNT }, (_, i) => DISCOVERY_PORT_FIRST + i);
   const found = await Promise.all(ports.map(probe));
-  return found.filter((s): s is FoundSession => !!s && !isConnected(s.token)).sort((a, b) => b.startedAt - a.startedAt);
+  // Newest session first; ties (sessions started in the same second) by folder, then port, so the order never shuffles.
+  return found
+    .filter((s): s is FoundSession => !!s && !isConnected(s.token))
+    .sort((a, b) => b.startedAt - a.startedAt || a.cwd.localeCompare(b.cwd) || a.port - b.port);
 }
 
 /** Tells the waiting server that the user declined, then disconnects. */

@@ -96,6 +96,10 @@ async function handleApi(req, res, url, state) {
       const { username } = await readBody(req);
       return json(res, 200, { user: { name: username }, accessToken: 'tok_live_9f8e7d6c5b4a', refresh_token: 'rt_123' });
     }
+    case 'GET /api/slow-total':
+      // Slow on purpose, so a checkpoint is evaluated while the request is in flight unless replay waits for it.
+      await new Promise((r) => setTimeout(r, 1200));
+      return json(res, 200, { total: state.variant.fixed ? 42 : 0 });
     case 'GET /api/fail':
       return json(res, 500, { error: 'database is on fire', code: 'E_FIRE' });
     case 'GET /api/big':

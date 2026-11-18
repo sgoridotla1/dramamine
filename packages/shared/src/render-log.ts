@@ -132,13 +132,13 @@ export function renderRecordingList(list: RecordingSummary[]): string {
 const VERDICT_TEXT: Record<ReplayReport['verdict'], string> = {
   red: 'RED - at least one check failed: the bug reproduces (or the check does not match the fixed behaviour).',
   green: 'GREEN - every evaluated check passed.',
-  error: 'ERROR - a step could not be performed, so this replay says nothing about the bug.',
+  error: 'ERROR - a step could not be performed or a checked element was not found, so this replay says nothing about the bug.',
   unchecked: 'UNCHECKED - no deterministic checks were evaluated (none were given, or only judge checks).',
 };
 
 function checkLine(r: CheckResult): string {
   const c = r.check;
-  const status = { pass: 'PASS', fail: 'FAIL', judged: 'JUDGE', 'not-evaluated': 'SKIP' }[r.status];
+  const status = { pass: 'PASS', fail: 'FAIL', 'not-found': 'MISS', judged: 'JUDGE', 'not-evaluated': 'SKIP' }[r.status];
   let desc: string = c.op;
   if ('value' in c && c.value !== undefined) desc += ` ${quote(String(c.value))}`;
   if ('target' in c && c.target) desc += ` on ${renderLocatorWithMarkers(c.target)}`;

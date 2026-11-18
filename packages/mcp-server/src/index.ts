@@ -3,7 +3,7 @@ import { EXTENSION_ORIGIN } from '@str/shared';
 import { Bridge } from './bridge';
 import { openInChrome } from './open-url';
 import { createServer, recordingSentText } from './server';
-import { registerSession } from './session-files';
+import { processClient, processStartedAt, registerSession } from './session-files';
 import { typeIntoPane } from './wake';
 
 const bridge = new Bridge({
@@ -12,6 +12,11 @@ const bridge = new Bridge({
   openUrl: openInChrome,
   // stdout carries the MCP protocol; diagnostics go to stderr.
   log: (msg) => process.stderr.write(`[str] ${msg}\n`),
+  startedAt: processStartedAt(process.ppid) ?? Date.now(),
+  ...(() => {
+    const client = processClient(process.ppid);
+    return client ? { client } : {};
+  })(),
 });
 
 // Listen right away, so the side panel can find and connect to this session before the agent asks.

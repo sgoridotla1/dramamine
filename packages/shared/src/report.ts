@@ -60,14 +60,14 @@ export const ReplayReportSchema = z.object({
 export type ReplayReport = z.infer<typeof ReplayReportSchema>;
 
 /**
- * error     - a step could not be performed
+ * error     - a step could not be performed, or an element a check needs was not found
  * red       - at least one evaluated check failed
  * green     - every evaluated check passed (and at least one was evaluated)
  * unchecked - nothing deterministic was evaluated
  * Judged and not-evaluated checks never affect the verdict.
  */
 export function computeVerdict(input: { stepFailed: boolean; results: Pick<CheckResult, 'status'>[] }): Verdict {
-  if (input.stepFailed) return 'error';
+  if (input.stepFailed || input.results.some((r) => r.status === 'not-found')) return 'error';
   const evaluated = input.results.filter((r) => r.status === 'pass' || r.status === 'fail');
   if (evaluated.some((r) => r.status === 'fail')) return 'red';
   if (evaluated.length > 0) return 'green';

@@ -1,6 +1,6 @@
 import type { ElementFacts } from '@str/shared';
 import type { CheckpointDraft } from '../messages';
-import { deepElements, isVisible, normalizeText } from '../locators/dom';
+import { deepElements, elementText, isVisible } from '../locators/dom';
 import { describeElement, targetFor } from '../locators/generate';
 
 /** Elements captured at freeze time: what was on screen when the user pressed the shortcut. */
@@ -30,7 +30,7 @@ export function takeSnapshot(isOwnUi: (el: Element) => boolean): number {
     snapshot.push({
       el,
       rect,
-      text: normalizeText(el.textContent).slice(0, MAX_TEXT),
+      text: elementText(el).slice(0, MAX_TEXT),
       ...(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement ? { value: el.value } : {}),
     });
   }

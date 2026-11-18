@@ -136,12 +136,16 @@ export function createServer(bridge: AgentLink): McpServer {
         redactedValues: z.record(z.string(), z.string()).optional().describe('Values for redacted input steps, keyed by step number'),
         stepTimeoutMs: z.number().int().positive().max(60_000).optional().describe('How long each step waits for its element (default 5000)'),
         checkTimeoutMs: z.number().int().positive().max(60_000).optional().describe('How long checks retry at a checkpoint (default 5000)'),
+        images: z
+          .enum(['failed', 'all', 'none'])
+          .optional()
+          .describe("Screenshots to return: 'failed' (default) only for checkpoints that failed, could not find their element, are judged or have no checks; 'all' includes the recorded region again; 'none' returns text only"),
       },
     },
     (args) =>
       guard(async () => {
         const { report, images } = await bridge.request('replay', args);
-        return replayContent(report, images);
+        return replayContent(report, images, args.images);
       }),
   );
 

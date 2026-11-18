@@ -47,7 +47,7 @@ There are two ways to start: from the browser, or from Claude.
 
    Plain `claude` works too; then type something like *"fix the bug I sent"* after sending.
 2. Open the Dramamine side panel in Chrome. Under **Agents** it lists the Claude Code sessions running on your machine. Click **Connect** on your repo's session.
-3. Record the bug, take a checkpoint (**Alt+Shift+S**), stop, and click **Send to <your repo folder>**. With the channel on, Claude starts on it right away: it shows the checks it compiled, replays the recording, fixes the code and replays again to verify.
+3. Record the bug, take a checkpoint (**Alt+Shift+S**), stop, and click **Send to agent**. With the channel on, Claude starts on it right away: it shows the checks it compiled, replays the recording, fixes the code and replays again to verify.
 
 ### From Claude
 
@@ -55,7 +55,7 @@ There are two ways to start: from the browser, or from Claude.
 2. Chrome opens a connect page showing the agent's working directory. Click **Connect**. This opens the Dramamine side panel and, if the agent found your app's URL (for example a running dev server), the app.
 3. Click **Start recording** in the side panel and reproduce the bug.
 4. When you see it, press **Alt+Shift+S** or click **Take checkpoint**. The page freezes. Drag around the part that is wrong, check the **Actual** value and type what you **Expected** (for example *"Total should be $42 (2 x $21)"*). Press Enter. You can take several checkpoints. One without an expected value is kept as context only.
-5. Click **Stop recording**, then **Send to <your repo folder>**. The side panel shows when the agent is waiting. You can also send any earlier recording from the list, and view its full log first with **Log**.
+5. Click **Stop recording**, then **Send to agent**. The side panel shows when the agent is waiting. You can also send any earlier recording from the list, and view its full log first with **Log**.
 6. Claude shows you the checks it compiled, replays the recording (a new tab opens, and you can watch), fixes the code, and replays again to verify.
 
 ## Permissions and privacy

@@ -63,7 +63,9 @@ test('connect -> record -> send -> red baseline -> fix -> green verification', a
     expect(text(verify)).toContain('[GREEN]');
     expect(text(verify)).toContain('PASS  text-contains "$42" -> actual "$42"');
     expect(text(verify)).toContain('replayed: "$42"');
-    expect(verify.content.filter((c) => c.type === 'image').length).toBe(3);
+    // Screenshots come back only where they help: the failing baseline has them, the green verification does not.
+    expect(baseline.content.filter((c) => c.type === 'image').length).toBe(2);
+    expect(verify.content.filter((c) => c.type === 'image').length).toBe(0);
   } finally {
     await client.close();
   }

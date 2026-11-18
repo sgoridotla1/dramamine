@@ -62,7 +62,7 @@ test.describe('agent bridge', () => {
       const consent = b.lastPage();
       await expect(consent.getByTestId('cwd')).toHaveText('/Users/dev/shop');
       await expect(consent.getByTestId('app-url')).toHaveText(appUrl);
-      await expect(consent.getByText('Send to shop')).toBeVisible();
+      await expect(consent.getByText('Send to agent')).toBeVisible();
       await consent.getByRole('button', { name: 'Connect and open app' }).click();
       await expect(connecting).resolves.toBe(true);
       // The consent tab turns into the app.
@@ -106,12 +106,12 @@ test.describe('agent bridge', () => {
       await panel.bringToFront();
       await panel.getByRole('button', { name: 'Stop recording' }).click();
       await expect(panel.getByText('Recording saved')).toBeVisible();
-      await panel.getByTestId('recorder').getByRole('button', { name: 'Send to shop' }).click();
+      await panel.getByTestId('recorder').getByRole('button', { name: 'Send to agent' }).click();
 
       const id = await next;
       expect(id).toMatch(/^rec_/);
       await expect(panel.getByTestId('message')).toContainText('to the agent in shop');
-      await expect(panel.getByTestId('recording').getByRole('button', { name: 'Send again to shop' })).toBeVisible();
+      await expect(panel.getByTestId('recording').getByRole('button', { name: 'Resend' })).toBeVisible();
       await expect(panel.getByTestId('agent')).toContainText('1 recording sent');
       const { recording } = await b.bridge.request('getRecording', { id: id! });
       expect(recording.steps.some((s) => s.kind === 'click')).toBe(true);
@@ -147,7 +147,7 @@ test.describe('agent bridge', () => {
       await expect.poll(async () => panel.getByTestId('counts').textContent()).toContain('1 step,');
       await panel.bringToFront();
       await panel.getByRole('button', { name: 'Stop recording' }).click();
-      await panel.getByTestId('recorder').getByRole('button', { name: 'Send to shop' }).click();
+      await panel.getByTestId('recorder').getByRole('button', { name: 'Send to agent' }).click();
 
       await expect.poll(() => unclaimed).toHaveLength(1);
       await expect(b.bridge.nextRecording(1000)).resolves.toBe(unclaimed[0]);

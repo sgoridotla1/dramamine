@@ -31,8 +31,10 @@ describe('evaluateCheck', () => {
     expect(evaluateCheck(check('text-not-contains', '$42'), el(), [total]).status).toBe('fail');
   });
 
-  it('text checks fail when the element is missing', () => {
-    expect(evaluateCheck(check('text-contains', '$42'), null, [total])).toMatchObject({ status: 'fail', detail: 'the element was not found' });
+  it('text and value checks are not evaluated when the element is missing', () => {
+    expect(evaluateCheck(check('text-contains', '$42'), null, [total])).toMatchObject({ status: 'not-found', detail: 'the element was not found, so this check could not be evaluated' });
+    expect(evaluateCheck(check('text-not-contains', '$0'), null, [total]).status).toBe('not-found');
+    expect(evaluateCheck(check('value-equals', 'x'), null, [total]).status).toBe('not-found');
   });
 
   it('exists, visible and hidden', () => {

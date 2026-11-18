@@ -55,7 +55,7 @@ function render(tab: chrome.tabs.Tab | undefined): void {
       await chrome.tabs.update(tab.id, { url: appUrl });
       return;
     }
-    done('Connected', `The agent in ${folderName(cwd)} is connected. Open your app in this window, record the bug in the Dramamine side panel and click "Send to ${folderName(cwd)}". This tab will close.`, true);
+    done('Connected', `The agent in ${folderName(cwd)} is connected. Open your app in this window, record the bug in the Dramamine side panel and click "Send to agent". This tab will close.`, true);
     void closeSoon(4000);
   });
   deny.addEventListener('click', async () => {
@@ -75,7 +75,7 @@ function render(tab: chrome.tabs.Tab | undefined): void {
         { className: 'steps' },
         h('li', {}, h('span', {}, 'Record the steps that reproduce the bug in the ', h('strong', {}, 'Dramamine side panel'), '.')),
         h('li', {}, h('span', {}, 'Mark what is wrong with a checkpoint ', kbd('Alt', 'Shift', 'S'), '.')),
-        h('li', {}, h('span', {}, 'Stop recording and click ', h('strong', {}, `Send to ${folder}`), '. The agent replays it here to reproduce the bug and verify its fix.')),
+        h('li', {}, h('span', {}, 'Stop recording and click ', h('strong', {}, 'Send to agent'), '. The agent replays it here to reproduce the bug and verify its fix.')),
       ),
       h('div', { className: 'callout' }, icon('shield', 'sm'), h('span', {}, 'Only recordings you send are shared. They include screenshots, network bodies and console output, and go to the agent and its model provider. Passwords and auth headers are redacted when recorded.')),
       h('div', { className: 'footer' }, deny, connect),

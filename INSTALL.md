@@ -61,7 +61,7 @@ If any of these is missing, see [Troubleshooting](#troubleshooting).
 1. In the side panel, click **Connect** on your session.
 2. Open your app, click **Start recording** and reproduce the bug.
 3. Press **Alt+Shift+S**, drag over the part that is wrong and type what you expected.
-4. Click **Stop recording**, then **Send to <your folder>**.
+4. Click **Stop recording**, then **Send to agent**.
 
 Claude wakes up, replays the recording to confirm the bug, fixes it and replays again to verify. You can also start from Claude: type `/dramamine:record-bug` and it opens Chrome for you. The [README](README.md#use) covers both flows.
 

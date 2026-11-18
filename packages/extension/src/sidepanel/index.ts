@@ -33,7 +33,6 @@ let showAllAgents = false;
 /** Recording whose trace was just copied, for the button's feedback. */
 let copied: string | null = null;
 
-const DISCOVER_EVERY_MS = 15_000;
 
 async function discover(): Promise<void> {
   if (discovering) return;
@@ -45,6 +44,12 @@ async function discover(): Promise<void> {
     discovering = false;
     render();
   }
+}
+
+/** The folder's parent path, shortened, so sessions in folders with the same name can be told apart. */
+function parentPath(cwd: string): string {
+  const parts = cwd.split(/[\\/]/).filter(Boolean).slice(0, -1);
+  return parts.length > 2 ? `…/${parts.slice(-2).join('/')}` : `/${parts.join('/')}`;
 }
 
 function ageText(t: number): string {
@@ -97,16 +102,21 @@ async function run(fn: () => Promise<{ ok: boolean; error?: string } | undefined
   await refresh();
 }
 
-/** One "Send to <folder>" button per connected agent. */
+/**
+ * One send button per connected agent: "Send to agent" / "Resend". With several agents connected,
+ * each button names its folder so they can be told apart; the full path is in the tooltip.
+ */
 function sendButtons(r: RecordingSummary, prominent: boolean): HTMLElement[] {
-  return connectedSessions().map((s) => {
+  const sessions = connectedSessions();
+  return sessions.map((s) => {
     const sent = s.shared.includes(r.id);
+    const which = sessions.length > 1 ? ` · ${folderName(s.cwd)}` : '';
     return h(
       'button',
       {
         className: prominent ? 'primary block' : sent ? 'sm ghost' : 'sm',
         disabled: busy,
-        title: s.cwd,
+        title: `${sent ? 'Send again to' : 'Send to'} the agent in ${s.cwd}`,
         dataset: { testid: 'send', cwd: s.cwd },
         onclick: () =>
           void run(async () => {
@@ -124,7 +134,7 @@ function sendButtons(r: RecordingSummary, prominent: boolean): HTMLElement[] {
           }),
       },
       icon('send', prominent ? '' : 'sm'),
-      sent ? `Send again to ${folderName(s.cwd)}` : `Send to ${folderName(s.cwd)}`,
+      `${sent ? 'Resend' : 'Send to agent'}${which}`,
     );
   });
 }
@@ -381,8 +391,8 @@ function recordingItem(r: RecordingSummary): HTMLElement {
           : [h('button', { className: 'sm', disabled: true, title: 'Connect an agent under Agents first' }, icon('send', 'sm'), 'Send to agent')]),
         sentTo.length ? h('span', { className: 'sent' }, icon('check', 'sm'), 'Sent') : null,
       ),
-      h('button', { className: 'sm ghost', title: 'Copy the steps-to-reproduce log the agent gets', onclick: () => void copyTrace(r) }, icon(copied === r.id ? 'check' : 'copy', 'sm'), copied === r.id ? 'Copied' : 'Copy trace'),
-      h('button', { className: 'sm ghost', title: 'Download the recording with its screenshots as JSON', onclick: () => void download(r) }, icon('download', 'sm'), 'Download'),
+      h('button', { className: `icon-btn${copied === r.id ? ' done' : ''}`, title: copied === r.id ? 'Copied' : 'Copy trace: the steps-to-reproduce log the agent gets', ariaLabel: copied === r.id ? 'Copied' : 'Copy trace', onclick: () => void copyTrace(r) }, icon(copied === r.id ? 'check' : 'copy', 'sm')),
+      h('button', { className: 'icon-btn', title: 'Download the recording with its screenshots (JSON)', ariaLabel: 'Download', onclick: () => void download(r) }, icon('download', 'sm')),
     ),
     log !== undefined ? h('pre', { className: 'log', dataset: { testid: 'full-log' } }, log) : '',
   );
@@ -409,12 +419,14 @@ function agentRow(s: SessionSummary): HTMLElement {
   );
 }
 
-function availableRow(f: FoundSession): HTMLElement {
+function availableRow(f: FoundSession, sameName: boolean): HTMLElement {
+  const where = f.client === 'terminal' ? 'Terminal' : f.client === 'app' ? 'Claude app' : null;
+  const details = [where, ageText(f.startedAt), sameName ? parentPath(f.cwd) : null].filter(Boolean).join(' · ');
   return h(
     'li',
     { className: 'card agent available', dataset: { testid: 'available-agent', cwd: f.cwd } },
     h('span', { className: 'avatar' }, icon('bot')),
-    h('div', { className: 'meta' }, h('div', { className: 'name', title: f.cwd }, folderName(f.cwd)), h('div', { className: 'state faint', title: f.cwd }, ageText(f.startedAt))),
+    h('div', { className: 'meta' }, h('div', { className: 'name', title: f.cwd }, folderName(f.cwd)), h('div', { className: 'state faint', title: f.cwd }, details)),
     h(
       'button',
       {
@@ -436,11 +448,17 @@ function availableRow(f: FoundSession): HTMLElement {
   );
 }
 
+/** Another listed session's folder has the same name but a different path, so the path tells them apart. */
+function sameNameElsewhere(cwd: string): boolean {
+  const name = folderName(cwd);
+  return [...(state?.sessions ?? []), ...available].some((s) => s.cwd !== cwd && folderName(s.cwd) === name);
+}
+
 function agentsSection(): HTMLElement {
   const sessions = state?.sessions ?? [];
   const known = new Set(sessions.map((s) => s.token));
   // Connected sessions first, then running ones, newest first.
-  const rows = [...sessions.map((s) => ({ cwd: s.cwd, el: () => agentRow(s) })), ...available.filter((f) => !known.has(f.token)).map((f) => ({ cwd: f.cwd, el: () => availableRow(f) }))];
+  const rows = [...sessions.map((s) => ({ cwd: s.cwd, el: () => agentRow(s) })), ...available.filter((f) => !known.has(f.token)).map((f) => ({ cwd: f.cwd, el: () => availableRow(f, sameNameElsewhere(f.cwd)) }))];
   const query = agentQuery.trim().toLowerCase();
   const matching = query ? rows.filter((r) => r.cwd.toLowerCase().includes(query)) : rows;
   const shown = query || showAllAgents ? matching : matching.slice(0, AGENTS_SHOWN);
@@ -526,25 +544,11 @@ chrome.runtime.onMessage.addListener((msg: SwBroadcast) => {
   if (msg.type === 'state-changed') {
     state = msg.state;
     void refresh();
-void discover();
-setInterval(() => {
-  if (document.visibilityState === 'visible') void discover();
-}, DISCOVER_EVERY_MS);
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') void discover();
-});
   }
 });
 chrome.tabs.onActivated.addListener(() => void refresh());
 chrome.tabs.onUpdated.addListener((_id, info) => {
   if (info.url || info.status === 'complete') void refresh();
-void discover();
-setInterval(() => {
-  if (document.visibilityState === 'visible') void discover();
-}, DISCOVER_EVERY_MS);
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') void discover();
-});
 });
 setInterval(() => {
   const el = document.querySelector<HTMLElement>('[data-testid="elapsed"]');
@@ -552,10 +556,5 @@ setInterval(() => {
 }, 1000);
 
 void refresh();
+// Agents are looked up when the panel opens and when the refresh button is clicked, never on a timer.
 void discover();
-setInterval(() => {
-  if (document.visibilityState === 'visible') void discover();
-}, DISCOVER_EVERY_MS);
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') void discover();
-});

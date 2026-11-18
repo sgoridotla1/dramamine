@@ -103,8 +103,16 @@ describe('replay report', () => {
     expect(renderReplayReport(r)).toMatchSnapshot();
   });
 
-  it('attaches recorded and replayed screenshots', () => {
-    const content = replayContent(report(), { blob_r1: 'R0', rpl_r: 'R1', rpl_v: 'V1' });
-    expect(content.filter((c) => c.type === 'text').slice(1).map((c) => (c as { text: string }).text)).toEqual(['CP#1 region, recorded', 'CP#1 region, replayed', 'CP#1 viewport, replayed']);
+  it('attaches replayed screenshots only where they help, unless asked for all or none', () => {
+    const images = { blob_r1: 'R0', rpl_r: 'R1', rpl_v: 'V1' };
+    const labels = (c: ReturnType<typeof replayContent>) => c.filter((x) => x.type === 'text').slice(1).map((x) => (x as { text: string }).text);
+    // The checkpoint's check failed: its replayed screenshots are worth seeing; the recorded region is already known.
+    expect(labels(replayContent(report(), images))).toEqual(['CP#1 region, replayed', 'CP#1 viewport, replayed']);
+    expect(labels(replayContent(report(), images, 'all'))).toEqual(['CP#1 region, recorded', 'CP#1 region, replayed', 'CP#1 viewport, replayed']);
+    expect(replayContent(report(), images, 'none')).toHaveLength(1);
+    // A passing checkpoint gets no images by default.
+    const green = report();
+    green.checkpoints[0]!.checks = [{ check: { checkpoint: 1, op: 'text-contains', value: '$42' }, status: 'pass', actual: '$42' }];
+    expect(labels(replayContent(green, images))).toEqual([]);
   });
 });

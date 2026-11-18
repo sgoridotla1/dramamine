@@ -97,7 +97,7 @@ export async function addMugs(page: Page, url: string, times = 2): Promise<void>
   }
 }
 
-/** What the side panel's "Send to <folder>" button does, for the session started in `cwd`. */
+/** What the side panel's "Send to agent" button does, for the session started in `cwd`. */
 export async function sendToAgent(sw: Worker, cwd: string, id: string): Promise<void> {
   const res = await sw.evaluate(
     async ([c, i]) => {

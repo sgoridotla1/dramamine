@@ -25,6 +25,9 @@ import { captureViewport, cropAndScale } from './images';
 
 const LOAD_TIMEOUT_MS = 15_000;
 const SETTLE_MS = 50;
+/** Before a checkpoint, wait until no fetch/XHR has been in flight for this long (at most IDLE_MAX_MS). */
+const IDLE_MS = 300;
+const IDLE_MAX_MS = 3000;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -121,25 +124,51 @@ export async function runReplay(recording: Recording, recordedImages: Images, pa
   const consoleSeen: ConsoleEntry[] = [];
   const networkSeen: NetworkEntry[] = [];
   const requests = new Map<string, { method: string; url: string; type: string; at: number }>();
+  const inflight = new Set<string>();
+  let lastNetworkAt = Date.now();
+  // Exceptions and errors from the page itself, not from extensions' content scripts.
+  const pageContexts = new Set<number>();
+  const fromPage = (contextId: number | undefined) => contextId === undefined || pageContexts.has(contextId);
   cdp.onEvent((m, p) => {
-    if (m === 'Runtime.exceptionThrown') {
+    if (m === 'Runtime.executionContextCreated') {
+      if (p.context?.auxData?.isDefault) pageContexts.add(p.context.id);
+    } else if (m === 'Runtime.exceptionThrown') {
       const d = p.exceptionDetails ?? {};
+      if (!fromPage(d.executionContextId)) return;
       const text = String(d.exception?.description ?? d.text ?? 'Uncaught exception').split('\n')[0]!;
       consoleSeen.push({ step: currentStep, at: Date.now(), level: 'exception', text });
-    } else if (m === 'Runtime.consoleAPICalled' && p.type === 'error') {
+    } else if (m === 'Runtime.consoleAPICalled' && p.type === 'error' && fromPage(p.executionContextId)) {
       consoleSeen.push({ step: currentStep, at: Date.now(), level: 'error', text: (p.args ?? []).map((a: any) => a.value ?? a.description ?? '').join(' ') });
     } else if (m === 'Network.requestWillBeSent') {
       requests.set(p.requestId, { method: p.request.method, url: p.request.url, type: p.type, at: Date.now() });
+      if (p.type === 'Fetch' || p.type === 'XHR') inflight.add(p.requestId), (lastNetworkAt = Date.now());
+    } else if ((m === 'Network.loadingFinished' || m === 'Network.loadingFailed') && inflight.delete(p.requestId)) {
+      lastNetworkAt = Date.now();
+      if (m === 'Network.loadingFailed' && !p.canceled) {
+        const r = requests.get(p.requestId)!;
+        networkSeen.push({ step: currentStep, at: r.at, method: r.method, url: r.url, resourceType: r.type === 'XHR' ? 'xhr' : 'fetch', errorText: p.errorText });
+      }
     } else if (m === 'Network.responseReceived' && p.response.status >= 400) {
       const r = requests.get(p.requestId);
       if (r && (r.type === 'Fetch' || r.type === 'XHR' || r.type === 'Document')) {
         networkSeen.push({ step: currentStep, at: r.at, method: r.method, url: r.url, resourceType: r.type === 'XHR' ? 'xhr' : 'fetch', status: p.response.status });
       }
-    } else if (m === 'Network.loadingFailed' && !p.canceled) {
-      const r = requests.get(p.requestId);
-      if (r && (r.type === 'Fetch' || r.type === 'XHR')) networkSeen.push({ step: currentStep, at: r.at, method: r.method, url: r.url, resourceType: r.type === 'XHR' ? 'xhr' : 'fetch', errorText: p.errorText });
     }
   });
+
+  const networkIdle = async () => {
+    const until = Date.now() + IDLE_MAX_MS;
+    while (Date.now() < until && (inflight.size > 0 || Date.now() - lastNetworkAt < IDLE_MS)) await sleep(50);
+  };
+
+  const originOf = (url: string) => {
+    try {
+      return new URL(url).origin;
+    } catch {
+      return '';
+    }
+  };
+  const appOrigins = new Set([recording.startUrl, ...recording.steps.flatMap((s) => ('url' in s ? [s.url] : 'navigation' in s && s.navigation ? [s.navigation] : []))].map(originOf));
 
   const steps: StepResult[] = [];
   const checkpointResults: CheckpointResult[] = [];
@@ -227,6 +256,7 @@ export async function runReplay(recording: Recording, recordedImages: Images, pa
 
   const evalCheckpoint = async (cp: Checkpoint) => {
     const checks = params.checks.filter((c) => c.checkpoint === cp.id);
+    await networkIdle();
     const reply = await ask<CheckpointReply>(tabId, { type: 'eval-checkpoint', locators: cp.target.locators, checks, timeoutMs: checkTimeout }, checkTimeout + LOAD_TIMEOUT_MS);
     const shot = await captureViewport(cdp);
     const regionId = imageId();
@@ -309,7 +339,8 @@ export async function runReplay(recording: Recording, recordedImages: Images, pa
       const ex = consoleSeen.filter((c) => c.level === 'exception');
       return ex.length ? { check, status: 'fail', actual: `${ex.length} exception(s)`, detail: ex.slice(0, 3).map((e) => `step ${e.step}: ${e.text}`).join('; ') } : { check, status: 'pass', actual: 'no exceptions' };
     }
-    const errors = networkSeen.filter((n) => !check.urlPattern || n.url.includes(check.urlPattern));
+    // Without a pattern, only the app's own origins count; ad blockers' blocks never do.
+    const errors = networkSeen.filter((n) => n.errorText !== 'net::ERR_BLOCKED_BY_CLIENT' && (check.urlPattern ? n.url.includes(check.urlPattern) : appOrigins.has(originOf(n.url))));
     return errors.length
       ? { check, status: 'fail', actual: `${errors.length} failed request(s)`, detail: errors.slice(0, 3).map((n) => `${n.method} ${n.url} -> ${n.status ?? n.errorText}`).join('; ') }
       : { check, status: 'pass', actual: 'no failed requests' };

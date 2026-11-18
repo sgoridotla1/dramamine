@@ -46,22 +46,36 @@ export function normalizeText(s: string | null | undefined): string {
   return (s ?? '').replace(/\s+/g, ' ').trim();
 }
 
-/** Text content with whitespace normalised, descending into open shadow roots. */
+/** Whether an element starts a new line of text (anything that is not inline), so its text is separated by a space. */
+function separatesText(el: Element): boolean {
+  if (el.tagName === 'BR') return true;
+  const display = el.ownerDocument.defaultView?.getComputedStyle(el).display ?? '';
+  return display !== '' && !display.startsWith('inline') && display !== 'contents';
+}
+
+/**
+ * The text a user reads in an element, descending into open shadow roots: adjacent text nodes
+ * join without a space (React renders `$${total}` as "$" + "42", which reads "$42"), and block
+ * boundaries become a space. Recording, checks and text locators all use this one rule.
+ */
 export function elementText(el: Element): string {
   if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) return '';
   const parts: string[] = [];
-  const visit = (node: Node) => {
+  const visit = (node: Node, root: boolean) => {
     if (node.nodeType === Node.TEXT_NODE) parts.push(node.textContent ?? '');
     else if (node instanceof Element) {
       if (SKIPPED_TAGS.has(node.tagName)) return;
-      if (node.shadowRoot) visit(node.shadowRoot);
-      for (const c of Array.from(node.childNodes)) visit(c);
+      const gap = !root && separatesText(node);
+      if (gap) parts.push(' ');
+      if (node.shadowRoot) visit(node.shadowRoot, false);
+      for (const c of Array.from(node.childNodes)) visit(c, false);
+      if (gap) parts.push(' ');
     } else if (node instanceof ShadowRoot || node instanceof DocumentFragment) {
-      for (const c of Array.from(node.childNodes)) visit(c);
+      for (const c of Array.from(node.childNodes)) visit(c, false);
     }
   };
-  visit(el);
-  return normalizeText(parts.join(' '));
+  visit(el, true);
+  return normalizeText(parts.join(''));
 }
 
 export function textMatches(actual: string, expected: string, exact: boolean | undefined): boolean {

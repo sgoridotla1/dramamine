@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Rendered total</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<h1>Rendered total</h1>
+<button type="button" id="show">Show total</button>
+<table><tr><th>Total</th><td data-testid="rendered-total"></td></tr></table>
+<script type="module">
+  // Renders like a framework does: "$" and the number are separate text nodes.
+  const cell = document.querySelector('[data-testid="rendered-total"]');
+  document.getElementById('show').addEventListener('click', async () => {
+    cell.textContent = 'Loading…';
+    const { total } = await (await fetch('/api/slow-total')).json();
+    cell.replaceChildren(document.createTextNode('$'), document.createTextNode(String(total)));
+  });
+</script>
+</body></html>

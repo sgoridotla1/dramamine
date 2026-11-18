@@ -37,6 +37,10 @@ export interface BridgeOptions {
   log?: (msg: string) => void;
   /** Ports to try before falling back to a random one (default: the discovery range). */
   ports?: number[];
+  /** When the agent session started (default: now); the side panel orders sessions by it. */
+  startedAt?: number;
+  /** Where the agent session runs, shown in the side panel. */
+  client?: 'terminal' | 'app';
 }
 
 const DISCOVERY_PORTS = Array.from({ length: DISCOVERY_PORT_COUNT }, (_, i) => DISCOVERY_PORT_FIRST + i);
@@ -55,7 +59,7 @@ type Waiter = { resolve: () => void; reject: (e: Error) => void };
  */
 export class Bridge {
   readonly token = randomBytes(32).toString('hex');
-  readonly startedAt = Date.now();
+  readonly startedAt: number;
   private wss: WebSocketServer | null = null;
   private port = 0;
   private socket: WebSocket | null = null;
@@ -71,7 +75,9 @@ export class Bridge {
   /** Called when the user sends a recording while no wait_for_recording is pending, to wake the agent. */
   onUnclaimedRecording: ((r: { id: string; title?: string }) => void) | null = null;
 
-  constructor(private readonly opts: BridgeOptions) {}
+  constructor(private readonly opts: BridgeOptions) {
+    this.startedAt = opts.startedAt ?? Date.now();
+  }
 
   get connected(): boolean {
     return this.socket !== null;
@@ -137,7 +143,7 @@ export class Bridge {
       if (!authenticated && msg.type === 'discover') {
         // The side panel lists running sessions; connecting is the user's click there.
         clearTimeout(helloTimer);
-        ws.send(JSON.stringify({ type: 'session-info', token: this.token, cwd: this.opts.cwd, startedAt: this.startedAt, connected: this.connected } satisfies ServerMessage));
+        ws.send(JSON.stringify({ type: 'session-info', token: this.token, cwd: this.opts.cwd, startedAt: this.startedAt, connected: this.connected, ...(this.opts.client ? { client: this.opts.client } : {}) } satisfies ServerMessage));
         ws.close(1000, 'discovered');
         return;
       }

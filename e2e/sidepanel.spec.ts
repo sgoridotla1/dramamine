@@ -75,6 +75,38 @@ test.describe('side panel', () => {
     expect(saved).toMatchObject({ format: 'dramamine-recording', version: 1, recording: { id: rec.id } });
   });
 
+  test('looks for agents only when opened and when refresh is clicked', async ({ context, sw, extensionId, fixture }) => {
+    const app = await context.newPage();
+    await app.goto(`${fixture.url}/misc.html`);
+    const tabId = await tabIdOf(sw, app);
+    const panel = await context.newPage();
+    // Count the panel's agent lookups.
+    await panel.addInitScript(() => {
+      (window as any).lookups = 0;
+      const send = chrome.runtime.sendMessage.bind(chrome.runtime);
+      (chrome.runtime as any).sendMessage = (msg: any, ...rest: any[]) => {
+        if (msg?.type === 'discover-sessions') (window as any).lookups++;
+        return (send as any)(msg, ...rest);
+      };
+    });
+    await panel.goto(`chrome-extension://${extensionId}/sidepanel.html?tab=${tabId}`);
+    const lookups = () => panel.evaluate(() => (window as any).lookups as number);
+    await expect.poll(lookups).toBe(1);
+
+    // State changes and page loads do not trigger lookups.
+    await panel.getByRole('button', { name: 'Start recording' }).click();
+    await app.bringToFront();
+    await app.click('#create');
+    await app.reload();
+    await panel.bringToFront();
+    await panel.getByRole('button', { name: 'Stop recording' }).click();
+    await panel.waitForTimeout(1000);
+    expect(await lookups()).toBe(1);
+
+    await panel.getByRole('button', { name: 'Find running agents' }).click();
+    await expect.poll(lookups).toBe(2);
+  });
+
   test('explains that browser pages cannot be recorded', async ({ context, sw, extensionId }) => {
     const page = await context.newPage();
     await page.goto('about:blank#str-panel');

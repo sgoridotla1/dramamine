@@ -15,6 +15,11 @@ describe('computeVerdict (session-replay: Replay verdict)', () => {
     expect(computeVerdict({ stepFailed: false, results: [{ status: 'pass' }, { status: 'pass' }] })).toBe('green');
   });
 
+  it('is error, not red, when a checked element was not found', () => {
+    expect(computeVerdict({ stepFailed: false, results: [{ status: 'not-found' }] })).toBe('error');
+    expect(computeVerdict({ stepFailed: false, results: [{ status: 'fail' }, { status: 'not-found' }] })).toBe('error');
+  });
+
   it('is unchecked when no checks were supplied', () => {
     expect(computeVerdict({ stepFailed: false, results: [] })).toBe('unchecked');
   });

@@ -91,4 +91,40 @@ test.describe('session-replay: checks and verdict', () => {
     const r3 = await replayOk(sw, { id: rec.id, checks: [{ checkpoint: 1, op: 'judge' }] });
     expect(r3.report.verdict).toBe('unchecked');
   });
+
+  test('framework-rendered text, late data and missing elements give trustworthy verdicts', async ({ context, sw, fixture }) => {
+    const page = await context.newPage();
+    await page.goto(`${fixture.url}/rendered.html`);
+    await startRecording(sw, page);
+    await page.getByRole('button', { name: 'Show total' }).click();
+    const cell = page.getByTestId('rendered-total');
+    await expect(cell).toHaveText('$0');
+    await takeCheckpoint(sw, page, cell, 'Total should be $42');
+    const rec = await stopRecording(sw);
+    await page.close();
+    // "$" and "0" are separate text nodes; the recording reads them the way the user does.
+    expect(rec.checkpoints[0]!.actual.text).toBe('$0');
+
+    // The total arrives 1.2 s after the click. "not contains $0" must not pass on "Loading…".
+    const checks = [
+      { checkpoint: 1, op: 'text-contains' as const, value: '$42' },
+      { checkpoint: 1, op: 'text-not-contains' as const, value: '$0' },
+    ];
+    const baseline = await replayOk(sw, { id: rec.id, checks });
+    expect(baseline.report.verdict).toBe('red');
+    expect(baseline.report.checkpoints[0]!.checks.map((c) => [c.status, c.actual])).toEqual([
+      ['fail', '$0'],
+      ['fail', '$0'],
+    ]);
+
+    await fixture.setVariant({ fixed: true });
+    const verify = await replayOk(sw, { id: rec.id, checks });
+    expect(verify.report.verdict).toBe('green');
+    expect(verify.report.checkpoints[0]!.replayed?.text).toBe('$42');
+
+    // A check whose element is not on the page is inconclusive, not "the bug reproduces".
+    const missing = await replayOk(sw, { id: rec.id, checkTimeoutMs: 800, checks: [{ checkpoint: 1, op: 'text-contains', value: '$42', target: { kind: 'css', selector: '#no-such-element' } }] });
+    expect(missing.report.verdict).toBe('error');
+    expect(missing.report.checkpoints[0]!.checks[0]!.status).toBe('not-found');
+  });
 });

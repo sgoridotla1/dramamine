@@ -22,7 +22,9 @@ Follow this workflow to fix a bug the user shows you. The user may also connect 
 Good to know:
 - Replays run in a new tab of the user's own browser session, from the recorded start URL. Server state is not reset: when the report warns about side effects (non-GET requests), repeated replays can drift (for example a cart that grows on every replay). Ask the user how to reset state if that affects the result.
 - Redacted inputs (passwords) cannot be replayed from the recording; pass their values in redactedValues (keyed by step number) only if the user gives them to you.
-- Only one replay runs at a time; a busy error means wait and retry.`;
+- Only one replay runs at a time; a busy error means wait and retry.
+- A check whose element is not found reports MISS and makes the verdict ERROR, not RED: the replay did not reach the state, so it says nothing about the bug. Fix the step or the check's target before trusting a red.
+- Replays return screenshots only for checkpoints that failed, missed their element, are judged or have no checks; pass images: "all" to see every one, or "none" for text only.`;
 
 export const TOOL_DESCRIPTIONS = {
   connect_browser:

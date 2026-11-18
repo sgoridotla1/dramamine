@@ -4,6 +4,8 @@ import { describeElement } from '../locators/generate';
 import { resolveAll, resolveTarget } from '../locators/resolve';
 
 const POLL_MS = 100;
+/** Checks must give the same results this long before a checkpoint settles, so "not contains" / "hidden" cannot pass before data renders. */
+const STABLE_MS = 500;
 const MAX_HTML = 500;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -117,7 +119,8 @@ export function evaluateCheck(check: CheckpointCheck, target: Element | null, ta
   const value = check.value === undefined ? '' : String(check.value);
   const text = el ? elementText(el) : '';
   const inputValue = el && 'value' in el ? String((el as HTMLInputElement).value) : '';
-  const missing = (): CheckResult => ({ check, status: 'fail', detail: 'the element was not found' });
+  // Absence answers exists/visible/hidden/count; for text and value checks it means the replay did not reach the state.
+  const missing = (): CheckResult => ({ check, status: 'not-found', detail: 'the element was not found, so this check could not be evaluated' });
   switch (check.op) {
     case 'text-equals':
       if (!el) return missing();
@@ -164,13 +167,18 @@ export interface CheckpointReply {
  */
 export async function evaluateCheckpoint(locators: Locator[], checks: CheckpointCheck[], timeoutMs: number): Promise<CheckpointReply> {
   const deadline = Date.now() + timeoutMs;
+  let last = '';
+  let since = Date.now();
   for (;;) {
     const r = resolveTarget(locators);
     const target = r.ok ? r.element : null;
     if (target && !isVisible(target)) target.scrollIntoView?.({ block: 'center', behavior: 'instant' });
     const results = checks.map((c) => evaluateCheck(c, target, locators));
-    const settled = results.every((x) => x.status !== 'fail');
-    const timedOut = Date.now() >= deadline;
+    const now = Date.now();
+    const key = JSON.stringify([!!target, results.map((x) => [x.status, x.actual])]);
+    if (key !== last) (last = key), (since = now);
+    const settled = results.every((x) => x.status === 'pass' || x.status === 'judged') && now - since >= STABLE_MS;
+    const timedOut = now >= deadline;
     // With no checks, wait (up to the timeout) only for the target to appear.
     if ((checks.length ? settled : !!target) || timedOut) {
       return {

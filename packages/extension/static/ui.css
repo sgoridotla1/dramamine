@@ -307,7 +307,8 @@ ul.list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction
 .rec-item .actions-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 2px; margin-top: 9px; }
 .rec-item .sends { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
 .rec-item .sends button { max-width: 100%; overflow: hidden; text-overflow: ellipsis; justify-content: flex-start; }
-.rec-item .actions-row > button.ghost { padding: 0 7px; }
+.rec-item .actions-row > .icon-btn { width: 28px; height: 28px; }
+.icon-btn.done { color: var(--ok-ink); }
 
 .agents { gap: 8px; }
 .search { display: flex; align-items: center; gap: 7px; height: 32px; padding: 0 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-3); }
