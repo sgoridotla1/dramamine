@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>SPA</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<nav><button type="button" data-route="/spa.html">Overview</button><button type="button" data-route="/spa.html?tab=settings">Settings</button></nav>
+<h1 id="title">Overview</h1>
+<script type="module">
+  const render = () => {
+    document.getElementById('title').textContent = new URLSearchParams(location.search).get('tab') === 'settings' ? 'Settings' : 'Overview';
+  };
+  for (const b of document.querySelectorAll('[data-route]')) {
+    b.addEventListener('click', () => { history.pushState({}, '', b.dataset.route); render(); });
+  }
+  window.addEventListener('popstate', render);
+  render();
+</script>
+</body></html>

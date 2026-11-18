@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Modal</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<h1>Covered button</h1>
+<button type="button" id="open">Open notice</button>
+<button type="button" id="target">Confirm</button>
+<p id="result"></p>
+<script type="module">
+  // ?modalMs=<n> keeps the notice up for n ms (default: until dismissed).
+  const ms = Number(new URLSearchParams(location.search).get('modalMs') ?? 0);
+  document.getElementById('open').addEventListener('click', () => {
+    const m = document.createElement('div');
+    m.className = 'modal';
+    m.innerHTML = '<div>Please wait...</div>';
+    document.body.append(m);
+    if (ms > 0) setTimeout(() => m.remove(), ms);
+  });
+  document.getElementById('target').addEventListener('click', () => {
+    document.getElementById('result').textContent = 'Confirmed';
+  });
+</script>
+</body></html>

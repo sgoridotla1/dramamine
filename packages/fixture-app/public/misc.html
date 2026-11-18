@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Misc</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<h1>Errors and network</h1>
+<p>
+  <button type="button" id="throw">Crash</button>
+  <button type="button" id="fail">Load report</button>
+  <button type="button" id="big">Load big</button>
+  <button type="button" id="create">Create item</button>
+  <button type="button" id="dbl">Double me</button>
+</p>
+<p><a href="/checkout.html" target="_blank">Open checkout in new tab</a></p>
+<p><label>Attachment <input type="file" name="attachment"></label></p>
+<p id="out" data-testid="misc-out"></p>
+<script type="module">
+  const out = document.getElementById('out');
+  document.getElementById('throw').addEventListener('click', () => {
+    const report = undefined;
+    out.textContent = report.title;
+  });
+  document.getElementById('fail').addEventListener('click', async () => {
+    const res = await fetch('/api/fail');
+    out.textContent = `status ${res.status}`;
+  });
+  document.getElementById('big').addEventListener('click', async () => {
+    const res = await fetch('/api/big');
+    out.textContent = `big ${(await res.text()).length}`;
+  });
+  document.getElementById('create').addEventListener('click', async () => {
+    const res = await fetch('/api/created', { method: 'POST', body: '{}' });
+    out.textContent = `created ${res.status}`;
+  });
+  document.getElementById('dbl').addEventListener('dblclick', () => { out.textContent = 'doubled'; });
+</script>
+</body></html>

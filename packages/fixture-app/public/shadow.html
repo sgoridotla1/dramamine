@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Shadow</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<h1>Shadow DOM</h1>
+<counter-widget></counter-widget>
+<script type="module">
+  customElements.define('counter-widget', class extends HTMLElement {
+    connectedCallback() {
+      const root = this.attachShadow({ mode: 'open' });
+      root.innerHTML = '<button type="button">Increment</button> <span data-testid="count">0</span>';
+      let n = 0;
+      root.querySelector('button').addEventListener('click', () => { root.querySelector('span').textContent = String(++n); });
+    }
+  });
+</script>
+</body></html>

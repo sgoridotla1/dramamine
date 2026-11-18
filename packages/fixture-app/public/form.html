@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Login</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<h1>Login</h1>
+<form id="login">
+  <p><label>Username <input name="username" autocomplete="off"></label></p>
+  <p><label>Password <input name="password" type="password"></label></p>
+  <p><label>Country
+    <select name="country">
+      <option value="">Choose...</option>
+      <option value="ua">Ukraine</option>
+      <option value="il">Israel</option>
+      <option value="pl">Poland</option>
+    </select>
+  </label></p>
+  <p><button type="submit">Sign in</button></p>
+</form>
+<p id="greeting" role="status"></p>
+<script type="module">
+  document.getElementById('login').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(e.target));
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: 'Bearer secret-session-token' },
+      body: JSON.stringify(data),
+    });
+    const { user } = await res.json();
+    const country = e.target.country.selectedOptions[0].textContent;
+    document.getElementById('greeting').textContent = `Welcome ${user.name} from ${country}`;
+  });
+</script>
+</body></html>

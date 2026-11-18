@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Cart</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<nav><a href="/">Home</a><a href="/products.html">Products</a></nav>
+<h1>Cart</h1>
+<table>
+  <thead><tr><th>Item</th><th>Qty</th><th>Price</th></tr></thead>
+  <tbody id="lines"></tbody>
+  <tfoot><tr><th>Total</th><td></td><td data-testid="cart-total">...</td></tr></tfoot>
+</table>
+<p><a href="/checkout.html" data-testid="checkout-button">Checkout</a></p>
+<script type="module">
+  import { cartTotal, formatPrice } from '/pricing.js';
+  const { items } = await (await fetch('/api/cart')).json();
+  const lines = document.getElementById('lines');
+  for (const item of items) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${item.name}</td><td>${item.qty}</td><td>${formatPrice(item.price)}</td>`;
+    lines.append(tr);
+  }
+  document.querySelector('[data-testid="cart-total"]').textContent = formatPrice(cartTotal(items));
+</script>
+</body></html>

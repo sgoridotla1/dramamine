@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Trusted</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<h1>Trusted-only control</h1>
+<button type="button" id="buy">Buy now</button>
+<p id="result" data-testid="trusted-result">not bought</p>
+<script type="module">
+  // Mimics anti-automation handlers that ignore script-dispatched events.
+  document.getElementById('buy').addEventListener('click', (e) => {
+    if (!e.isTrusted) return;
+    document.getElementById('result').textContent = 'bought';
+  });
+</script>
+</body></html>

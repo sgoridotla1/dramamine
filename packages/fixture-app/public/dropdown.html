@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Dropdown</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<h1>Sort</h1>
+<div style="position: relative">
+  <button type="button" id="sort" aria-haspopup="listbox" aria-expanded="false">Sort by</button>
+</div>
+<script type="module">
+  const button = document.getElementById('sort');
+  let menu = null;
+  const close = () => { menu?.remove(); menu = null; button.setAttribute('aria-expanded', 'false'); };
+  button.addEventListener('click', () => {
+    if (menu) return close();
+    menu = document.createElement('ul');
+    menu.className = 'menu';
+    menu.setAttribute('role', 'listbox');
+    menu.innerHTML = '<li role="option">Price: low to high</li><li role="option">Price: high to low</li><li role="option">Newest</li>';
+    button.after(menu);
+    button.setAttribute('aria-expanded', 'true');
+  });
+  window.addEventListener('blur', close);
+</script>
+</body></html>

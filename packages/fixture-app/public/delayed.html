@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Delayed</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<h1>Delayed button</h1>
+<button type="button" id="load">Load</button>
+<div id="slot"></div>
+<p id="result" data-testid="delayed-result"></p>
+<script type="module">
+  document.getElementById('load').addEventListener('click', () => {
+    setTimeout(() => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = 'Continue';
+      b.addEventListener('click', () => {
+        setTimeout(() => { document.getElementById('result').textContent = 'Continued'; }, 1000);
+      });
+      document.getElementById('slot').append(b);
+    }, 2000);
+  });
+</script>
+</body></html>

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Products</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<nav><a href="/">Home</a><a href="/cart.html">Cart</a></nav>
+<h1>Products</h1>
+<img src="/logo.svg" alt="Shop logo" width="40" height="40">
+<div class="grid" id="products"></div>
+<script type="module">
+  const { products } = await (await fetch('/api/products')).json();
+  const grid = document.getElementById('products');
+  for (const p of products) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.testid = `product-card-${p.id}`;
+    card.innerHTML = `<h3>${p.name}</h3><p>$${p.price}</p><button type="button">Add to cart</button>`;
+    card.querySelector('button').addEventListener('click', async () => {
+      await fetch('/api/cart', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ productId: p.id }) });
+    });
+    grid.append(card);
+  }
+</script>
+</body></html>
