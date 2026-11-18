@@ -1,10 +1,10 @@
 {
-  "name": "str",
+  "name": "dramamine",
   "owner": { "name": "STR Recorder" },
   "metadata": { "description": "STR Recorder: show your coding agent a bug by recording it in Chrome." },
   "plugins": [
     {
-      "name": "str",
+      "name": "dramamine",
       "source": "./plugin",
       "description": "Connect Chrome to your agent, record the steps that reproduce a bug, and let the agent replay them to prove its fix."
     }

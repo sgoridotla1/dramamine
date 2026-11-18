@@ -1,6 +1,10 @@
+<p align="center">
+  <img src="assets/dramamine.png" width="200" alt="dramamine logo: a girl in a winged headset with a pill">
+</p>
+
 # STR Recorder
 
-Show your coding agent a bug instead of describing it. Type `/str:record-bug` in Claude Code: the agent connects to your Chrome, you record the steps to reproduce (STR) the bug and mark exactly what is wrong, and click **Send**. The agent reproduces it, fixes it in your repo, and replays the same steps to prove the fix works.
+Show your coding agent a bug instead of describing it. Type `/dramamine:record-bug` in Claude Code: the agent connects to your Chrome, you record the steps to reproduce (STR) the bug and mark exactly what is wrong, and click **Send**. The agent reproduces it, fixes it in your repo, and replays the same steps to prove the fix works.
 
 ```
  Chrome                                   your machine
@@ -8,40 +12,26 @@ Show your coding agent a bug instead of describing it. Type `/str:record-bug` in
 | STR Recorder extension         |       | Claude Code (in your repo)          |
 |  - records steps, console,     |  ws   |   |  MCP (stdio)                    |
 |    network, locators           |<----->|   v                                 |
-|  - checkpoints: screenshot +   | local |  str plugin: /str:record-bug skill  |
-|    "expected result"           | host  |   + MCP server                      |
-|  - "Send to agent"             |       |   connect_browser / wait_for_       |
-|  - replays steps, runs checks  |       |   recording / replay ...            |
+|  - checkpoints: screenshot +   | local |  dramamine plugin:                  |
+|    "expected result"           | host  |   /dramamine:record-bug skill       |
+|  - "Send to agent"             |       |   + MCP server: connect_browser,    |
+|  - replays steps, runs checks  |       |   wait_for_recording, replay ...    |
 +--------------------------------+       +-------------------------------------+
 ```
 
 The agent follows a red-before-green loop. It turns your "expected" text into checks, replays the recording and requires the checks to **fail** on the current code, fixes the code, then replays with the **same** checks and reports success only when they pass.
 
-## Requirements
-
-- Google Chrome (or Chromium) 120 or newer
-- Node.js 20 or newer
-- [Claude Code](https://claude.com/claude-code), or any MCP client that runs stdio servers
-
 ## Install
 
+See **[INSTALL.md](INSTALL.md)** for requirements, checks, updating and troubleshooting. In short:
+
 ```bash
-git clone <this repo> str && cd str
-npm install
-npm run build
+npm install && npm run build
+claude plugin marketplace add "$(pwd)"
+claude plugin install dramamine@dramamine --scope user
 ```
 
-1. **Load the extension.** Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and select `packages/extension/dist`. Pin **STR Recorder** to the toolbar.
-2. **Install the Claude Code plugin.** It adds the `/str:record-bug` skill and registers the MCP server. In Claude Code:
-
-   ```
-   /plugin marketplace add /path/to/str
-   /plugin install str@str
-   ```
-
-   Restart Claude Code afterwards. To try a local change without reinstalling, start Claude Code with `claude --plugin-dir /path/to/str/plugin`.
-
-Installing copies the plugin, including the server built into `plugin/server/`, into Claude Code's plugin cache. After you change the server, run `npm run build` and then `/plugin update str@str`. If you used the MCP server without the plugin before (`claude mcp add ... str`), remove it with `claude mcp remove str` so the agent does not see two copies.
+Then load `packages/extension/dist` as an unpacked extension at `chrome://extensions` (Developer mode on), and restart Claude Code.
 
 ## Use
 
@@ -52,7 +42,7 @@ There are two ways to start: from the browser, or from Claude.
 1. Start Claude Code in your repository with the STR channel, so a recording you send wakes the agent:
 
    ```bash
-   claude --dangerously-load-development-channels plugin:str@str
+   claude --dangerously-load-development-channels plugin:dramamine@dramamine
    ```
 
    Plain `claude` works too; then type something like *"fix the bug I sent"* after sending.
@@ -61,7 +51,7 @@ There are two ways to start: from the browser, or from Claude.
 
 ### From Claude
 
-1. In your repository, start Claude Code and type `/str:record-bug`, optionally with what is wrong (*"/str:record-bug the cart total is $0"*). Saying *"let me show you the bug in the browser"* works too.
+1. In your repository, start Claude Code and type `/dramamine:record-bug`, optionally with what is wrong (*"/dramamine:record-bug the cart total is $0"*). Saying *"let me show you the bug in the browser"* works too.
 2. Chrome opens a connect page showing the agent's working directory. Click **Connect**. This opens the STR side panel and, if the agent found your app's URL (for example a running dev server), the app.
 3. Click **Start recording** in the side panel and reproduce the bug.
 4. When you see it, press **Alt+Shift+S** or click **Take checkpoint**. The page freezes. Drag around the part that is wrong, check the **Actual** value and type what you **Expected** (for example *"Total should be $42 (2 x $21)"*). Press Enter. You can take several checkpoints. One without an expected value is kept as context only.
@@ -88,10 +78,7 @@ There are two ways to start: from the browser, or from Claude.
 
 ## Troubleshooting
 
-- **Chrome did not open the connect page.** The server launches Chrome from its default location. Set `STR_CHROME_PATH` to your Chrome or Chromium binary in the environment you start Claude Code from. Alternatively, open the URL from the tool error message in Chrome yourself.
-- **"Chrome did not connect within 120 seconds".** Check that the extension is loaded and enabled at `chrome://extensions`.
-- **No "Send to ..." button.** The side panel shows one only for agents that are connected. Run the skill again to reconnect.
-- **"Could not attach to the tab".** Another debugger (another extension, for example) holds the tab. Close it and try again.
+See [INSTALL.md](INSTALL.md#troubleshooting).
 
 ## Development
 
@@ -114,4 +101,4 @@ npm run typecheck
 npm start -w @str/fixture-app   # fixture shop on http://127.0.0.1:5173
 ```
 
-To try the full loop by hand, run the fixture shop and type `/str:record-bug` in Claude Code started in this repository. When Chrome opens the shop, record: add two **Coffee mugs** to the cart, open **Cart**, take a checkpoint on the **$0** total with the expectation *"Total should be $42"*, stop and send. The bug is in `packages/fixture-app/public/pricing.js`.
+To try the full loop by hand, run the fixture shop and type `/dramamine:record-bug` in Claude Code started in this repository. When Chrome opens the shop, record: add two **Coffee mugs** to the cart, open **Cart**, take a checkpoint on the **$0** total with the expectation *"Total should be $42"*, stop and send. The bug is in `packages/fixture-app/public/pricing.js`.

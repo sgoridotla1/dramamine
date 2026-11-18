@@ -42,9 +42,9 @@ export function icon(name: IconName, className = ''): SVGSVGElement {
   return tpl.content.firstElementChild as SVGSVGElement;
 }
 
-/** The STR mark: a target on the brand tile. */
+/** The extension's logo, the same artwork as its toolbar icon. */
 export function logo(size: 'sm' | 'lg' = 'sm'): HTMLElement {
-  return h('span', { className: `logo logo-${size}` }, icon('target'));
+  return h('img', { className: `logo logo-${size}`, src: 'icons/icon-128.png', alt: '' });
 }
 
 export function kbd(...keys: string[]): HTMLElement {

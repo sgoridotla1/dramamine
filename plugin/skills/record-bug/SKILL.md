@@ -5,7 +5,7 @@ description: Connect the user's Chrome to this session so they can record the st
 
 # Record a bug in Chrome and fix it
 
-If the user already sent a recording (a `<channel source="plugin:str:str">` event says so, or they tell you), skip to step 3: call `wait_for_recording`, which returns it right away. They connected from the STR side panel themselves.
+If the user already sent a recording (a `<channel source="plugin:dramamine:str">` event says so, or they tell you), skip to step 3: call `wait_for_recording`, which returns it right away. They connected from the STR side panel themselves.
 
 The STR Recorder extension records what the user does in Chrome (clicks, typing, console, network) and lets them mark checkpoints: what is wrong on screen and what they expected. The `str` MCP tools connect this session to the extension, wait for the user to send a recording, and replay it in their browser.
 
