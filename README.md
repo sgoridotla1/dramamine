@@ -68,7 +68,7 @@ There are two ways to start: from the browser, or from Claude.
 
 ## Known limitations
 
-- Channels are a Claude Code research preview. On a Team or Enterprise plan an owner must turn them on (Organization settings > Claude Code > Channels); otherwise the event is dropped silently and you nudge the agent yourself after sending. The side panel finds sessions on ports 47600-47619; a session that cannot get one of them can still be connected with the skill.
+- Channels are a Claude Code research preview. On a Team or Enterprise plan an owner must turn them on (Organization settings > Claude Code > Channels); otherwise the event is dropped silently and you nudge the agent yourself after sending. The side panel finds sessions on ports 47600-47699; a session that cannot get one of them can still be connected with the skill.
 - One tab per recording. Popups, new tabs, file uploads and drag and drop are noted in the log but not recorded. Hover-only menus and cross-origin iframes are not supported.
 - Replay runs in your current browser session from the recorded start URL and does **not** reset server state. When a recording changes data (POST, PUT and so on), repeated replays can drift, and the report warns about it.
 - Redacted inputs (passwords) can only be replayed when you give their values to the agent.

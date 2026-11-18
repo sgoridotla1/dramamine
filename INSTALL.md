@@ -96,7 +96,7 @@ Then remove **Dramamine** at `chrome://extensions`. Removing it deletes its stor
 
 | Symptom | Fix |
 | --- | --- |
-| **Agents** says "No agents running" | Start Claude Code after installing the plugin, and check that it is enabled in that repo (`claude mcp list` shows `plugin:dramamine:str`). Sessions are found on ports 47600-47619; `lsof -nP -iTCP:47600-47619 -sTCP:LISTEN` shows which are in use. Click the refresh icon next to **Agents** to look again. |
+| **Agents** says "No agents running" | Start Claude Code after installing the plugin, and check that it is enabled in that repo (`claude mcp list` shows `plugin:dramamine:str`). Sessions are found on ports 47600-47699; `lsof -nP -iTCP:47600-47699 -sTCP:LISTEN` shows which are in use. Click the refresh icon next to **Agents** to look again. |
 | The session is listed as "reconnecting", or Send says it is not connected | Claude was restarted, which gives the session a new token. Wait a few seconds for the old entry to go, then click **Connect** on the new one. |
 | You clicked Send but Claude does nothing | Check that the status bar shows **1 monitor**. Monitors do not run with `claude -p`. If it is missing, type *"fix the bug I sent"*; the recording is waiting and returns at once. |
 | Changes to the extension do not show up | Reload **Dramamine** at `chrome://extensions`. |

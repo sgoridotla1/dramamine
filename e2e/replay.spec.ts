@@ -82,8 +82,8 @@ test.describe('session-replay: steps', () => {
     const rec = await stopRecording(sw);
     await page.close();
 
-    // Continue appears after 2 s, so a 500 ms timeout fails step 2.
-    const r = await replayOk(sw, { id: rec.id, stepTimeoutMs: 500, checks: [{ checkpoint: 2, op: 'text-equals', value: 'Continued' }] });
+    // Continue appears after 2 s, so a 1 s timeout fails step 2 (and leaves step 1 room on a busy machine).
+    const r = await replayOk(sw, { id: rec.id, stepTimeoutMs: 1000, checks: [{ checkpoint: 2, op: 'text-equals', value: 'Continued' }] });
     expect(r.report.verdict).toBe('error');
     expect(r.report.failedStep).toBe(2);
     const failed = r.report.steps.find((s) => s.index === 2)!;

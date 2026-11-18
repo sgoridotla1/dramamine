@@ -41,6 +41,10 @@ async function handleUi(msg: UiToSw): Promise<unknown> {
       const r = await store.getRecording(msg.id);
       return r ? { ok: true, text: renderRecordingLog(r) } : { ok: false, error: 'Recording not found' };
     }
+    case 'export-recording': {
+      const r = await store.getRecording(msg.id);
+      return r ? { ok: true, recording: r, images: await store.getImages(store.imageIds(r)) } : { ok: false, error: 'Recording not found' };
+    }
     case 'send-recording':
       return bridge.sendRecording(msg.token, msg.id);
     case 'discover-sessions':

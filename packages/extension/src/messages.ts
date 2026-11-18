@@ -53,6 +53,7 @@ export type UiToSw =
   | { type: 'rename-recording'; id: string; title: string }
   | { type: 'delete-recording'; id: string }
   | { type: 'get-recording-log'; id: string }
+  | { type: 'export-recording'; id: string }
   | { type: 'send-recording'; id: string; token: string }
   | { type: 'discover-sessions' }
   | { type: 'connect-session'; port: number; token: string; cwd: string }

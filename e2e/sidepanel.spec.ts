@@ -1,5 +1,6 @@
 import { expect, test } from './fixtures';
-import { listRecordings, tabIdOf } from './helpers';
+import { readFileSync } from 'node:fs';
+import { listRecordings, startRecording, stopRecording, tabIdOf } from './helpers';
 
 test.describe('side panel', () => {
   test('records, lists, renames and deletes recordings', async ({ context, sw, extensionId, fixture }) => {
@@ -39,6 +40,39 @@ test.describe('side panel', () => {
     await expect(panel.getByTestId('recording')).toHaveCount(0);
     await expect(panel.getByText('No recordings yet.')).toBeVisible();
     expect(await listRecordings(sw)).toEqual([]);
+  });
+
+  test('copies the trace and downloads the recording', async ({ context, sw, extensionId, fixture }) => {
+    const app = await context.newPage();
+    await app.goto(`${fixture.url}/misc.html`);
+    const tabId = await tabIdOf(sw, app);
+    await startRecording(sw, app);
+    await app.click('#fail');
+    await app.waitForTimeout(150);
+    const rec = await stopRecording(sw);
+
+    const panel = await context.newPage();
+    await panel.goto(`chrome-extension://${extensionId}/sidepanel.html?tab=${tabId}`);
+    await panel.evaluate(() => {
+      (window as any).copiedText = null;
+      navigator.clipboard.writeText = async (t: string) => void ((window as any).copiedText = t);
+    });
+    const actions = panel.getByTestId('recording').getByTestId('recording-actions');
+    // Without a connected agent, sending is offered but disabled.
+    await expect(actions.getByRole('button', { name: 'Send to agent' })).toBeDisabled();
+
+    await actions.getByRole('button', { name: 'Copy trace' }).click();
+    await expect(actions.getByRole('button', { name: 'Copied' })).toBeVisible();
+    const copiedText = await panel.evaluate(() => (window as any).copiedText as string);
+    expect(copiedText).toContain(`# STR: ${rec.title}`);
+    expect(copiedText).toContain('/api/fail -> 500');
+
+    const downloading = panel.waitForEvent('download');
+    await actions.getByRole('button', { name: 'Download' }).click();
+    const file = await downloading;
+    expect(file.suggestedFilename()).toMatch(/^misc-\d{4}-\d{2}-\d{2}\.dramamine\.json$/);
+    const saved = JSON.parse(readFileSync((await file.path())!, 'utf8'));
+    expect(saved).toMatchObject({ format: 'dramamine-recording', version: 1, recording: { id: rec.id } });
   });
 
   test('explains that browser pages cannot be recorded', async ({ context, sw, extensionId }) => {

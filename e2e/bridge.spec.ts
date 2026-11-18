@@ -156,6 +156,38 @@ test.describe('agent bridge', () => {
     }
   });
 
+  test('lists the 3 most recent agents, shows all on request, and searches by folder', async ({ context, sw, extensionId }) => {
+    // Sessions running on this machine may be listed too, so there are at least four.
+    const bridges = ['alpha', 'bravo', 'charlie', 'delta'].map((n) => bridgeFor(context, `/e2e/agents/${n}-repo`));
+    try {
+      for (const b of bridges) await b.bridge.listen();
+      const panel = await context.newPage();
+      await panel.goto(`chrome-extension://${extensionId}/sidepanel.html`);
+      const rows = panel.locator('[data-testid="available-agent"], [data-testid="agent"]');
+      const toggle = panel.getByTestId('agents-toggle');
+      await expect(toggle).toHaveText(/^Show all \d+ agents$/);
+      await expect(rows).toHaveCount(3);
+      const total = Number((await toggle.textContent())!.match(/\d+/)![0]);
+      expect(total).toBeGreaterThanOrEqual(4);
+
+      await toggle.click();
+      await expect(rows).toHaveCount(total);
+      await expect(toggle).toHaveText('Show fewer');
+
+      const search = panel.getByTestId('agent-search');
+      await search.pressSequentially('charl');
+      await expect(search).toBeFocused();
+      await expect(rows).toHaveCount(1);
+      await expect(rows).toContainText('charlie-repo');
+      await search.fill('no-such-folder');
+      await expect(panel.getByTestId('no-agent-match')).toHaveText('No agents match "no-such-folder".');
+      await panel.getByRole('button', { name: 'Clear search' }).click();
+      await expect(rows).toHaveCount(total);
+    } finally {
+      for (const b of bridges) await b.bridge.close();
+    }
+  });
+
   test('reconnects after a service worker restart without a new prompt; sessions are isolated', async ({ context, sw, fixture }) => {
     const one = await makeRecording(sw, context, fixture.url, '#create');
     const two = await makeRecording(sw, context, fixture.url, '#fail');

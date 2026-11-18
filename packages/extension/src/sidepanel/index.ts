@@ -26,6 +26,12 @@ const logs = new Map<string, string>();
 /** Agent sessions running on this machine that are not connected yet. */
 let available: FoundSession[] = [];
 let discovering = false;
+/** The agents list shows the most recent few unless expanded or searched. */
+const AGENTS_SHOWN = 3;
+let agentQuery = '';
+let showAllAgents = false;
+/** Recording whose trace was just copied, for the button's feedback. */
+let copied: string | null = null;
 
 const DISCOVER_EVERY_MS = 15_000;
 
@@ -245,6 +251,49 @@ function toolButton(label: string, name: Parameters<typeof icon>[0], onclick: ()
   return b;
 }
 
+async function copyTrace(r: RecordingSummary): Promise<void> {
+  const res = await call<{ ok: boolean; text?: string; error?: string }>({ type: 'get-recording-log', id: r.id });
+  if (!res.ok || !res.text) {
+    message = { text: res.error ?? 'Could not read the recording', error: true };
+    render();
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(res.text);
+  } catch {
+    // The clipboard API needs focus; fall back to a selection copy.
+    const area = h('textarea', { value: res.text });
+    document.body.append(area);
+    area.select();
+    document.execCommand('copy');
+    area.remove();
+  }
+  copied = r.id;
+  render();
+  setTimeout(() => {
+    if (copied === r.id) (copied = null), render();
+  }, 1500);
+}
+
+function fileName(title: string, at: number): string {
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'recording';
+  return `${slug}-${new Date(at).toISOString().slice(0, 10)}.dramamine.json`;
+}
+
+/** Saves the full recording (steps, console, network, checkpoints) with its screenshots. */
+async function download(r: RecordingSummary): Promise<void> {
+  const res = await call<{ ok: boolean; recording?: unknown; images?: Record<string, string>; error?: string }>({ type: 'export-recording', id: r.id });
+  if (!res.ok) {
+    message = { text: res.error ?? 'Could not read the recording', error: true };
+    render();
+    return;
+  }
+  const blob = new Blob([JSON.stringify({ format: 'dramamine-recording', version: 1, recording: res.recording, images: res.images }, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  h('a', { href: url, download: fileName(r.title, r.createdAt) }).click();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
 function recordingItem(r: RecordingSummary): HTMLElement {
   const li = h('li', { className: 'card rec-item', dataset: { testid: 'recording', id: r.id } });
   if (renaming === r.id) {
@@ -321,14 +370,20 @@ function recordingItem(r: RecordingSummary): HTMLElement {
             }),
           ),
     ),
-    connectedSessions().length
-      ? h(
-          'div',
-          { className: 'send-row' },
-          ...sendButtons(r, false),
-          sentTo.length ? h('span', { className: 'sent' }, icon('check', 'sm'), 'Sent') : null,
-        )
-      : '',
+    h(
+      'div',
+      { className: 'actions-row', dataset: { testid: 'recording-actions' } },
+      h(
+        'div',
+        { className: 'sends' },
+        ...(connectedSessions().length
+          ? sendButtons(r, false)
+          : [h('button', { className: 'sm', disabled: true, title: 'Connect an agent under Agents first' }, icon('send', 'sm'), 'Send to agent')]),
+        sentTo.length ? h('span', { className: 'sent' }, icon('check', 'sm'), 'Sent') : null,
+      ),
+      h('button', { className: 'sm ghost', title: 'Copy the steps-to-reproduce log the agent gets', onclick: () => void copyTrace(r) }, icon(copied === r.id ? 'check' : 'copy', 'sm'), copied === r.id ? 'Copied' : 'Copy trace'),
+      h('button', { className: 'sm ghost', title: 'Download the recording with its screenshots as JSON', onclick: () => void download(r) }, icon('download', 'sm'), 'Download'),
+    ),
     log !== undefined ? h('pre', { className: 'log', dataset: { testid: 'full-log' } }, log) : '',
   );
   return li;
@@ -384,14 +439,52 @@ function availableRow(f: FoundSession): HTMLElement {
 function agentsSection(): HTMLElement {
   const sessions = state?.sessions ?? [];
   const known = new Set(sessions.map((s) => s.token));
-  const others = available.filter((f) => !known.has(f.token));
+  // Connected sessions first, then running ones, newest first.
+  const rows = [...sessions.map((s) => ({ cwd: s.cwd, el: () => agentRow(s) })), ...available.filter((f) => !known.has(f.token)).map((f) => ({ cwd: f.cwd, el: () => availableRow(f) }))];
+  const query = agentQuery.trim().toLowerCase();
+  const matching = query ? rows.filter((r) => r.cwd.toLowerCase().includes(query)) : rows;
+  const shown = query || showAllAgents ? matching : matching.slice(0, AGENTS_SHOWN);
+  const many = rows.length > AGENTS_SHOWN;
+
   const refresh = h('button', { className: 'icon-btn', title: 'Find running agents', ariaLabel: 'Find running agents', disabled: discovering, onclick: () => void discover() }, icon('refresh', `sm${discovering ? ' spin' : ''}`));
+  const search = many
+    ? h(
+        'label',
+        { className: 'search' },
+        icon('search', 'sm'),
+        h('input', {
+          type: 'search',
+          value: agentQuery,
+          placeholder: 'Search agents by folder',
+          ariaLabel: 'Search agents',
+          dataset: { testid: 'agent-search' },
+          oninput: (e: Event) => {
+            agentQuery = (e.target as HTMLInputElement).value;
+            render();
+          },
+        }),
+        agentQuery
+          ? h('button', { className: 'icon-btn clear', title: 'Clear search', ariaLabel: 'Clear search', onclick: () => ((agentQuery = ''), render()) }, icon('xCircle', 'sm'))
+          : null,
+      )
+    : null;
+  const toggle =
+    many && !query
+      ? h('button', { className: 'sm ghost more', dataset: { testid: 'agents-toggle' }, onclick: () => ((showAllAgents = !showAllAgents), render()) }, showAllAgents ? 'Show fewer' : `Show all ${rows.length} agents`)
+      : null;
+
   return h(
     'section',
     {},
-    h('h2', {}, 'Agents', h('span', { className: 'spacer' }), refresh),
-    sessions.length || others.length
-      ? h('ul', { className: 'list' }, ...sessions.map(agentRow), ...others.map(availableRow))
+    h('h2', {}, 'Agents', rows.length ? h('span', { className: 'count' }, String(rows.length)) : null, h('span', { className: 'spacer' }), refresh),
+    rows.length
+      ? h(
+          'div',
+          { className: 'stack agents' },
+          search,
+          shown.length ? h('ul', { className: 'list' }, ...shown.map((r) => r.el())) : h('p', { className: 'faint small', dataset: { testid: 'no-agent-match' } }, `No agents match "${agentQuery.trim()}".`),
+          toggle,
+        )
       : h(
           'div',
           { className: 'empty', dataset: { testid: 'no-agents' } },
@@ -414,11 +507,19 @@ function recordingsSection(): HTMLElement {
 }
 
 function render(): void {
+  // Re-rendering replaces the DOM; keep typing in the agent search uninterrupted.
+  const active = document.activeElement;
+  const typing = active instanceof HTMLInputElement && active.dataset.testid === 'agent-search' ? { start: active.selectionStart, end: active.selectionEnd } : null;
   // Until an agent is connected, connecting is the first step.
   const agentsFirst = !connectedSessions().length && !state?.recording;
   app.replaceChildren(
     h('main', { className: 'panel' }, topbar(), h('div', { className: 'content' }, messageLine(), ...(agentsFirst ? [agentsSection(), recorderCard()] : [recorderCard(), agentsSection()]), recordingsSection())),
   );
+  if (typing) {
+    const input = app.querySelector<HTMLInputElement>('[data-testid="agent-search"]');
+    input?.focus();
+    input?.setSelectionRange(typing.start, typing.end);
+  }
 }
 
 chrome.runtime.onMessage.addListener((msg: SwBroadcast) => {
