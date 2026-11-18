@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "STR Recorder",
+  "name": "Dramamine",
   "version": "0.2.0",
   "description": "Record steps to reproduce a bug and let a local coding agent replay them to verify its fix.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3gZatPO1RFYQfc/kaZhK3dO0jICpWBXleU+aU+fHZbgkYy9FF0kTDlv9mIyIOC5GhBrH0QWgmdKeURDlgkDLx7qA+E5X+tjSWd1OTgoj+jCCOtQLjZKSvNurB/QGMx5EVz+MIPdBGpE0fV9gyO74ShupEvXAmMl2+DOHDXEUlJ7inW6CQb8H3vku5s5MLBlceMX6KKsRw+XaWcN+m2LVJFR0eicKkQ32vcE0omszK99UOFKKsNbI+NJaLPEPkcxS/recyS4FN4JbbF6eeikhhHjWOJylpBn8/n39vHayE4EQJYYThfbEQQe/9vLIyaAjgJb8NhgVFxfASiEo3Z/0aQIDAQAB",
@@ -41,7 +41,7 @@
     "default_path": "sidepanel.html"
   },
   "action": {
-    "default_title": "STR Recorder",
+    "default_title": "Dramamine",
     "default_icon": {
       "16": "icons/icon-16.png",
       "32": "icons/icon-32.png"

@@ -15,7 +15,7 @@ const REQUEST_TIMEOUT_MS: Record<MethodName, number> = {
 };
 
 export const INSTALL_HELP =
-  'Make sure the STR Recorder extension is installed and enabled in Chrome: in the STR repository run `npm run build`, open chrome://extensions, turn on Developer mode, choose "Load unpacked" and select packages/extension/dist. Then try again.';
+  'Make sure the Dramamine extension is installed and enabled in Chrome: in the Dramamine repository run `npm run build`, open chrome://extensions, turn on Developer mode, choose "Load unpacked" and select packages/extension/dist. Then try again.';
 
 /** An error the agent should see verbatim. */
 export class BridgeError extends Error {

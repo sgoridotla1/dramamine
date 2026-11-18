@@ -55,7 +55,7 @@ function render(tab: chrome.tabs.Tab | undefined): void {
       await chrome.tabs.update(tab.id, { url: appUrl });
       return;
     }
-    done('Connected', `The agent in ${folderName(cwd)} is connected. Open your app in this window, record the bug in the STR side panel and click "Send to ${folderName(cwd)}". This tab will close.`, true);
+    done('Connected', `The agent in ${folderName(cwd)} is connected. Open your app in this window, record the bug in the Dramamine side panel and click "Send to ${folderName(cwd)}". This tab will close.`, true);
     void closeSoon(4000);
   });
   deny.addEventListener('click', async () => {
@@ -73,7 +73,7 @@ function render(tab: chrome.tabs.Tab | undefined): void {
       h(
         'ol',
         { className: 'steps' },
-        h('li', {}, h('span', {}, 'Record the steps that reproduce the bug in the ', h('strong', {}, 'STR side panel'), '.')),
+        h('li', {}, h('span', {}, 'Record the steps that reproduce the bug in the ', h('strong', {}, 'Dramamine side panel'), '.')),
         h('li', {}, h('span', {}, 'Mark what is wrong with a checkpoint ', kbd('Alt', 'Shift', 'S'), '.')),
         h('li', {}, h('span', {}, 'Stop recording and click ', h('strong', {}, `Send to ${folder}`), '. The agent replays it here to reproduce the bug and verify its fix.')),
       ),
@@ -85,7 +85,7 @@ function render(tab: chrome.tabs.Tab | undefined): void {
 
 async function main(): Promise<void> {
   if (!port || !token) {
-    done('Invalid link', 'This page must be opened by the STR MCP server.', false);
+    done('Invalid link', 'This page must be opened by the Dramamine plugin in Claude Code.', false);
     return;
   }
   const status = await call<{ known: boolean }>({ type: 'consent-status', token });

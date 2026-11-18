@@ -23,7 +23,7 @@ export type AgentLink = Pick<Bridge, 'request' | 'ensureConnected' | 'nextRecord
 
 /** What wakes the agent (channel event or monitor line) when the user sends a recording nobody waits for. */
 export function recordingSentText(r: { id: string; title?: string }): string {
-  return `STR: the user sent the bug recording "${r.title ?? r.id}" (${r.id}) from Chrome. Call wait_for_recording to get it (it returns right away), then reproduce the bug with a baseline replay, fix it and verify with a replay. If you already have ${r.id}, ignore this.`;
+  return `Dramamine: the user sent the bug recording "${r.title ?? r.id}" (${r.id}) from Chrome. Call wait_for_recording to get it (it returns right away), then reproduce the bug with a baseline replay, fix it and verify with a replay. If you already have ${r.id}, ignore this.`;
 }
 
 /** The event pushed into an idle Claude Code session (channels) when the user sends a recording. */
@@ -31,7 +31,7 @@ export function recordingSentEvent(r: { id: string; title?: string }) {
   return { method: 'notifications/claude/channel', params: { content: recordingSentText(r), meta: { recording_id: r.id } } };
 }
 
-const SEND_HINT = 'Ask the user to reproduce the bug in Chrome, mark what is wrong with a checkpoint (Alt+Shift+S) and click "Send to agent" in the STR side panel. Then call wait_for_recording.';
+const SEND_HINT = 'Ask the user to reproduce the bug in Chrome, mark what is wrong with a checkpoint (Alt+Shift+S) and click "Send to agent" in the Dramamine side panel. Then call wait_for_recording.';
 
 export function createServer(bridge: AgentLink): McpServer {
   const server = new McpServer(

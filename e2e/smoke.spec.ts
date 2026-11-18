@@ -8,7 +8,7 @@ test('extension loads with its fixed id and serves the side panel', async ({ con
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(`chrome-extension://${extensionId}/sidepanel.html`);
-  await expect(page).toHaveTitle('STR Recorder');
+  await expect(page).toHaveTitle('Dramamine');
   expect(errors).toEqual([]);
 
   const app = await context.newPage();

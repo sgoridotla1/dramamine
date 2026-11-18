@@ -1,7 +1,7 @@
 {
   "name": "dramamine",
-  "owner": { "name": "STR Recorder" },
-  "metadata": { "description": "STR Recorder: show your coding agent a bug by recording it in Chrome." },
+  "owner": { "name": "Dramamine" },
+  "metadata": { "description": "Dramamine: show your coding agent a bug by recording it in Chrome." },
   "plugins": [
     {
       "name": "dramamine",

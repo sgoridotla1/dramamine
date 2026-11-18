@@ -2,14 +2,14 @@
   <img src="assets/dramamine.png" width="200" alt="dramamine logo: a girl in a winged headset with a pill">
 </p>
 
-# STR Recorder
+# Dramamine
 
 Show your coding agent a bug instead of describing it. Type `/dramamine:record-bug` in Claude Code: the agent connects to your Chrome, you record the steps to reproduce (STR) the bug and mark exactly what is wrong, and click **Send**. The agent reproduces it, fixes it in your repo, and replays the same steps to prove the fix works.
 
 ```
  Chrome                                   your machine
 +--------------------------------+       +-------------------------------------+
-| STR Recorder extension         |       | Claude Code (in your repo)          |
+| Dramamine extension            |       | Claude Code (in your repo)          |
 |  - records steps, console,     |  ws   |   |  MCP (stdio)                    |
 |    network, locators           |<----->|   v                                 |
 |  - checkpoints: screenshot +   | local |  dramamine plugin:                  |
@@ -39,20 +39,20 @@ There are two ways to start: from the browser, or from Claude.
 
 ### From the browser (fastest)
 
-1. Start Claude Code in your repository with the STR channel, so a recording you send wakes the agent:
+1. Start Claude Code in your repository with the dramamine channel, so a recording you send wakes the agent:
 
    ```bash
    claude --dangerously-load-development-channels plugin:dramamine@dramamine
    ```
 
    Plain `claude` works too; then type something like *"fix the bug I sent"* after sending.
-2. Open the STR side panel in Chrome. Under **Agents** it lists the Claude Code sessions running on your machine. Click **Connect** on your repo's session.
+2. Open the Dramamine side panel in Chrome. Under **Agents** it lists the Claude Code sessions running on your machine. Click **Connect** on your repo's session.
 3. Record the bug, take a checkpoint (**Alt+Shift+S**), stop, and click **Send to <your repo folder>**. With the channel on, Claude starts on it right away: it shows the checks it compiled, replays the recording, fixes the code and replays again to verify.
 
 ### From Claude
 
 1. In your repository, start Claude Code and type `/dramamine:record-bug`, optionally with what is wrong (*"/dramamine:record-bug the cart total is $0"*). Saying *"let me show you the bug in the browser"* works too.
-2. Chrome opens a connect page showing the agent's working directory. Click **Connect**. This opens the STR side panel and, if the agent found your app's URL (for example a running dev server), the app.
+2. Chrome opens a connect page showing the agent's working directory. Click **Connect**. This opens the Dramamine side panel and, if the agent found your app's URL (for example a running dev server), the app.
 3. Click **Start recording** in the side panel and reproduce the bug.
 4. When you see it, press **Alt+Shift+S** or click **Take checkpoint**. The page freezes. Drag around the part that is wrong, check the **Actual** value and type what you **Expected** (for example *"Total should be $42 (2 x $21)"*). Press Enter. You can take several checkpoints. One without an expected value is kept as context only.
 5. Click **Stop recording**, then **Send to <your repo folder>**. The side panel shows when the agent is waiting. You can also send any earlier recording from the list, and view its full log first with **Log**.
@@ -60,7 +60,7 @@ There are two ways to start: from the browser, or from Claude.
 
 ## Permissions and privacy
 
-- **`debugger` permission.** Recording and replay use the Chrome DevTools Protocol, which gives trusted input, console output with stack traces, and network bodies. Chrome shows a strong warning at install time and a *"STR Recorder started debugging this browser"* bar while it is attached. DevTools can stay open while you record.
+- **`debugger` permission.** Recording and replay use the Chrome DevTools Protocol, which gives trusted input, console output with stack traces, and network bodies. Chrome shows a strong warning at install time and a *"Dramamine started debugging this browser"* bar while it is attached. DevTools can stay open while you record.
 - **What is captured:** your clicks, typing, selections and Enter/Escape/Tab keys, with locators for each element; console errors and warnings; uncaught exceptions; `fetch`/XHR requests with status, timing and bodies up to 10 KB; navigation; and checkpoint screenshots. Images, scripts, styles and fonts are not captured.
 - **Redaction before anything is stored:** password fields are masked (the value never leaves the page), `Authorization`, `Cookie`, `Set-Cookie` and token-like headers are dropped, and JSON or form fields named like `password`, `token`, `secret`, `apiKey` or `auth` are replaced with `[redacted]`.
 - **Where data goes:** recordings stay in the extension's local storage until you click **Send**. Sent recordings go to that agent, and therefore to its model provider. Open **Log** on a recording to check it for personal data in page text before sending.

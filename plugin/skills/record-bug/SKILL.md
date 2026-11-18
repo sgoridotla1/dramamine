@@ -5,9 +5,9 @@ description: Connect the user's Chrome to this session so they can record the st
 
 # Record a bug in Chrome and fix it
 
-If the user already sent a recording (a `<channel source="plugin:dramamine:str">` event says so, or they tell you), skip to step 3: call `wait_for_recording`, which returns it right away. They connected from the STR side panel themselves.
+If the user already sent a recording (a `<channel source="plugin:dramamine:str">` event says so, or they tell you), skip to step 3: call `wait_for_recording`, which returns it right away. They connected from the Dramamine side panel themselves.
 
-The STR Recorder extension records what the user does in Chrome (clicks, typing, console, network) and lets them mark checkpoints: what is wrong on screen and what they expected. The `str` MCP tools connect this session to the extension, wait for the user to send a recording, and replay it in their browser.
+The Dramamine extension records what the user does in Chrome (clicks, typing, console, network) and lets them mark checkpoints: what is wrong on screen and what they expected. The `str` MCP tools connect this session to the extension, wait for the user to send a recording, and replay it in their browser.
 
 ## 1. Pick the app URL
 
@@ -20,11 +20,11 @@ The page the user will reproduce the bug on, so it opens for them:
 
 ## 2. Connect
 
-Call `connect_browser` with `url` when you have one. The first time, Chrome shows a connect page with this repo's folder. The user approves there, which opens the STR side panel and the app. If the tool reports that Chrome did not connect, pass its installation help on to the user.
+Call `connect_browser` with `url` when you have one. The first time, Chrome shows a connect page with this repo's folder. The user approves there, which opens the Dramamine side panel and the app. If the tool reports that Chrome did not connect, pass its installation help on to the user.
 
 Then tell the user what to do, in one short message:
 
-> Chrome is connected. In the STR side panel: **Start recording**, reproduce the bug, press **Alt+Shift+S** on the wrong part and type what you expected, then **Stop recording** and click **Send to <this folder>**.
+> Chrome is connected. In the Dramamine side panel: **Start recording**, reproduce the bug, press **Alt+Shift+S** on the wrong part and type what you expected, then **Stop recording** and click **Send to <this folder>**.
 
 If the user already described the bug, say what to mark in their terms (for example "mark the cart total").
 

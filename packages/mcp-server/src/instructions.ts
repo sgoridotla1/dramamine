@@ -1,9 +1,9 @@
 /** Guidance returned to agents in the MCP initialize result. */
-export const INSTRUCTIONS = `STR connects you to the user's Chrome through the STR Recorder extension. The user records the steps that reproduce a bug (clicks, typing, console and network activity) and marks checkpoints where something is wrong and what they expected, then sends the recording to you. You can replay a recording in the user's browser to reproduce the bug and to verify a fix.
+export const INSTRUCTIONS = `Dramamine connects you to the user's Chrome through the Dramamine extension. The user records the steps that reproduce a bug (clicks, typing, console and network activity) and marks checkpoints where something is wrong and what they expected, then sends the recording to you. You can replay a recording in the user's browser to reproduce the bug and to verify a fix.
 
-Follow this workflow to fix a bug the user shows you. The user may also connect from the STR side panel and send a recording without you asking: a channel event (or the user) then says a recording was sent; start at step 2 and call wait_for_recording, which returns it right away.
+Follow this workflow to fix a bug the user shows you. The user may also connect from the Dramamine side panel and send a recording without you asking: a channel event (or the user) then says a recording was sent; start at step 2 and call wait_for_recording, which returns it right away.
 
-1. Connect. Call connect_browser, with the URL of the app if you know it (for example the running dev server). Chrome asks the user to approve the connection, opens the STR side panel and the app.
+1. Connect. Call connect_browser, with the URL of the app if you know it (for example the running dev server). Chrome asks the user to approve the connection, opens the Dramamine side panel and the app.
 2. Get the recording. Tell the user in one short message to reproduce the bug, mark it with a checkpoint (Alt+Shift+S) and click "Send to agent" in the side panel. Then call wait_for_recording; it returns once the user sends one, with the full log and screenshots. If it times out, call it again or ask the user how it is going.
 3. Read it. Locators are in Playwright syntax; search the codebase for test ids (getByTestId / data-* attributes), labels and visible strings to find the code involved. Use console errors, stack traces and failed requests as leads.
 4. Compile the checks. For each checkpoint with an expected result, turn the user's words into deterministic checks for replay:
@@ -26,9 +26,9 @@ Good to know:
 
 export const TOOL_DESCRIPTIONS = {
   connect_browser:
-    "Connect this session to the user's Chrome. The first call opens a page in Chrome where the user approves the connection; it then opens the STR side panel, where they record the bug. Pass url to also open the app under test (for example the local dev server). Once connected, calling it again with a url opens that url in a new tab.",
+    "Connect this session to the user's Chrome. The first call opens a page in Chrome where the user approves the connection; it then opens the Dramamine side panel, where they record the bug. Pass url to also open the app under test (for example the local dev server). Once connected, calling it again with a url opens that url in a new tab.",
   wait_for_recording:
-    'Wait until the user sends a bug recording from the STR side panel in Chrome, then return it like get_recording: numbered steps with Playwright-style locators, network and console activity per step, and checkpoints with the actual value, the expected result and screenshots. Returns a recording sent earlier and not yet returned straight away. Connects first if needed.',
+    'Wait until the user sends a bug recording from the Dramamine side panel in Chrome, then return it like get_recording: numbered steps with Playwright-style locators, network and console activity per step, and checkpoints with the actual value, the expected result and screenshots. Returns a recording sent earlier and not yet returned straight away. Connects first if needed.',
   list_recordings: 'List the recordings the user sent to this session (id, title, start URL, number of steps and checkpoints).',
   get_recording:
     "Get a recording as a steps-to-reproduce log: numbered steps with Playwright-style locators, network and console activity per step, notes, and checkpoints with the actual value, the user's expected result and screenshots. Use format 'json' for the full structured recording, including every locator candidate and stored network bodies.",

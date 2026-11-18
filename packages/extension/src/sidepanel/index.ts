@@ -131,11 +131,11 @@ function topbar(): HTMLElement {
   const sessions = connectedSessions();
   const waiting = sessions.find((s) => s.waiting);
   const status = waiting
-    ? h('span', { className: 'chip', title: waiting.cwd }, h('span', { className: 'dot brand ring' }), `${folderName(waiting.cwd)} is waiting`)
+    ? h('span', { className: 'chip', title: waiting.cwd }, h('span', { className: 'dot brand ring' }), h('span', { className: 'label' }, `${folderName(waiting.cwd)} is waiting`))
     : sessions.length
-      ? h('span', { className: 'chip', title: sessions.map((s) => s.cwd).join('\n') }, h('span', { className: 'dot ok' }), sessions.length === 1 ? folderName(sessions[0]!.cwd) : plural(sessions.length, 'agent'))
-      : h('span', { className: 'chip' }, h('span', { className: 'dot' }), 'No agent');
-  return h('header', { className: 'topbar' }, logo(), h('h1', {}, 'STR Recorder'), h('span', { className: 'spacer' }), status);
+      ? h('span', { className: 'chip', title: sessions.map((s) => s.cwd).join('\n') }, h('span', { className: 'dot ok' }), h('span', { className: 'label' }, sessions.length === 1 ? folderName(sessions[0]!.cwd) : plural(sessions.length, 'agent')))
+      : h('span', { className: 'chip' }, h('span', { className: 'dot' }), h('span', { className: 'label' }, 'No agent'));
+  return h('header', { className: 'topbar' }, logo(), h('h1', {}, 'Dramamine'), h('span', { className: 'spacer' }), status);
 }
 
 function recorderCard(): HTMLElement {
@@ -397,7 +397,7 @@ function agentsSection(): HTMLElement {
           { className: 'empty', dataset: { testid: 'no-agents' } },
           icon('bot'),
           h('strong', {}, discovering ? 'Looking for agents...' : 'No agents running'),
-          h('span', { className: 'small' }, 'Start Claude Code with the STR plugin in your repo. It shows up here to connect.'),
+          h('span', { className: 'small' }, 'Start Claude Code with the dramamine plugin in your repo. It shows up here to connect.'),
         ),
   );
 }

@@ -2,6 +2,6 @@
   {
     "name": "str-recordings",
     "command": "node \"${CLAUDE_PLUGIN_ROOT}/server/str-monitor.js\"",
-    "description": "Bug recordings sent from the STR side panel in Chrome"
+    "description": "Bug recordings sent from the Dramamine side panel in Chrome"
   }
 ]

@@ -1,4 +1,4 @@
-/* STR Recorder UI: side panel and connect page. */
+/* Dramamine UI: side panel and connect page. */
 
 :root {
   --bg: #ffffff;
@@ -263,6 +263,11 @@ main.panel { padding: 0 0 20px; display: flex; flex-direction: column; }
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
 }
+
+/* The title never wraps; a long agent name in the status chip is truncated instead. */
+.topbar h1 { white-space: nowrap; }
+.topbar .chip { min-width: 0; }
+.chip .label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .content { padding: 14px; display: flex; flex-direction: column; gap: 18px; }
 section > h2 { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }

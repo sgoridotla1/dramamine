@@ -1,9 +1,9 @@
 # Install guide
 
-STR has two parts, and you need both:
+Dramamine has two parts, and you need both:
 
-- **STR Recorder**, a Chrome extension. It records the bug and replays it.
-- **dramamine**, a Claude Code plugin. It adds the `/dramamine:record-bug` skill, the MCP server that talks to the extension, and a background monitor that wakes Claude when you send a recording.
+- **The Chrome extension.** It records the bug and replays it.
+- **The Claude Code plugin** (`dramamine@dramamine`). It adds the `/dramamine:record-bug` skill, the MCP server that talks to the extension, and a background monitor that wakes Claude when you send a recording.
 
 Setup takes about five minutes.
 
@@ -17,8 +17,8 @@ Setup takes about five minutes.
 ## 1. Build
 
 ```bash
-git clone <repo-url> str
-cd str
+git clone <repo-url> dramamine
+cd dramamine
 npm install
 npm run build
 ```
@@ -30,7 +30,7 @@ npm run build
 1. Open `chrome://extensions`.
 2. Turn on **Developer mode** (top right).
 3. Click **Load unpacked** and select `packages/extension/dist` in the repo.
-4. Pin **STR Recorder** to the toolbar. Clicking it opens the side panel.
+4. Pin **Dramamine** to the toolbar. Clicking it opens the side panel.
 
 Chrome warns that the extension can debug your browser. That is expected: it records and replays through the Chrome DevTools Protocol, and Chrome shows a "started debugging this browser" bar while a recording or replay runs.
 
@@ -52,7 +52,7 @@ Restart any Claude Code sessions that were already open.
 1. In any repo, start `claude`.
 2. Run `claude mcp list` in another terminal. It should show `plugin:dramamine:str ... ✔ Connected`.
 3. The Claude Code status bar shows **1 monitor**.
-4. Open the STR side panel in Chrome. Under **Agents** your session is listed by folder, with a **Connect** button.
+4. Open the Dramamine side panel in Chrome. Under **Agents** your session is listed by folder, with a **Connect** button.
 
 If any of these is missing, see [Troubleshooting](#troubleshooting).
 
@@ -77,7 +77,7 @@ npm run build
 
 Then:
 
-1. Reload **STR Recorder** at `chrome://extensions` (the circular arrow). Chrome never picks up a new build on its own.
+1. Reload **Dramamine** at `chrome://extensions` (the circular arrow). Chrome never picks up a new build on its own.
 2. Restart your Claude Code sessions. The plugin is read straight from the repo's `plugin/` folder.
 3. If `plugin/.claude-plugin/plugin.json` has a new version, also run `claude plugin update dramamine@dramamine`.
 
@@ -90,7 +90,7 @@ claude plugin uninstall dramamine@dramamine --scope user
 claude plugin marketplace remove dramamine
 ```
 
-Then remove **STR Recorder** at `chrome://extensions`. Removing it deletes its stored recordings.
+Then remove **Dramamine** at `chrome://extensions`. Removing it deletes its stored recordings.
 
 ## Troubleshooting
 
@@ -99,7 +99,7 @@ Then remove **STR Recorder** at `chrome://extensions`. Removing it deletes its s
 | **Agents** says "No agents running" | Start Claude Code after installing the plugin, and check that it is enabled in that repo (`claude mcp list` shows `plugin:dramamine:str`). Sessions are found on ports 47600-47619; `lsof -nP -iTCP:47600-47619 -sTCP:LISTEN` shows which are in use. Click the refresh icon next to **Agents** to look again. |
 | The session is listed as "reconnecting", or Send says it is not connected | Claude was restarted, which gives the session a new token. Wait a few seconds for the old entry to go, then click **Connect** on the new one. |
 | You clicked Send but Claude does nothing | Check that the status bar shows **1 monitor**. Monitors do not run with `claude -p`. If it is missing, type *"fix the bug I sent"*; the recording is waiting and returns at once. |
-| Changes to the extension do not show up | Reload **STR Recorder** at `chrome://extensions`. |
+| Changes to the extension do not show up | Reload **Dramamine** at `chrome://extensions`. |
 | "Could not take a checkpoint: Receiving end does not exist" | The tab was open before the extension was reloaded. Current builds repair this by themselves; if it persists, reload the tab and start a new recording. |
 | "Could not attach to the tab" | Another debugger holds the tab, for example DevTools-based extensions. Close it and try again. |
 | `/dramamine:record-bug` does not open Chrome | The server starts Chrome from its default location. Set `STR_CHROME_PATH` to your Chrome binary in the shell you start Claude Code from, or open the URL from the error message yourself. |
